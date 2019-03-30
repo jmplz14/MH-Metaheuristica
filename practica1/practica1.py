@@ -10,12 +10,52 @@ from scipy.io import arff
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.neighbors import KNeighborsClassifier
 import sys
+from scipy.spatial import distance
 
 colopscopy = "datos/colposcopy.arff"
 ionosphere = "datos/ionosphere.arff"
 texture = "datos/texture.arff"
+min_peso = 0.2
 
+    
+def RELIEF(training):
+    num_valores = training[0].size - 1
+    num_elementos = np.size(training,0)
+    w = np.zeros(num_valores)
+    distancias = matrizDistancia(training[:, 0:-1])
+    
+    for i in range(num_elementos):
+        mejor_enemigo = int()
+        valor_enemigo = sys.float_info.max
+        mejor_amigo = int()
+        valor_amigo = sys.float_info.max
+        
+        for j in range(num_elementos):
+            if training[i][-1] == training[j][-1]:
+                if valor_amigo > distancias[i][j]:
+                    if i != j:
+                        valor_amigo = distancias[i][j]
+                        mejor_amigo = j
+                    
+            else:
+                if valor_enemigo > distancias[i][j]:
+                    valor_enemigo = distancias[i][j]
+                    mejor_enemigo = j
+                
+        w = w + np.absolute(training[i, 0:-1]-training[mejor_enemigo, 0:-1]) -\
+        np.absolute(training[i, 0:-1]-training[mejor_amigo, 0:-1]) 
+    
+    w_maximo = np.amax(w)
+    for i in range(num_valores):
+        if w[i] < 0:
+            w[i] = 0.0
+        else:
+            w[i] = w[i] / w_maximo
+            """if(w[i] < min_peso):
+                w[i] = 0"""
+    return w  
 
 def leerFicheroCSV(fichero):
     
@@ -30,6 +70,7 @@ def leerFicheroARFF(fichero, num_particiones):
     #Cargo los ficheros
     data = arff.loadarff(fichero)
     df = pd.DataFrame(data[0])
+    #print(RELIEF(df.values))
     #me quedo con la clases
     clase =  df.values[: , -1]
     clase = clase.reshape((1,clase.size))
@@ -49,7 +90,7 @@ def leerFicheroARFF(fichero, num_particiones):
     #print(distribucion_clases)
     num_filas = int(matriz_final.size / matriz_final[0].size)
     #print(num_filas)
-    np.random.shuffle(matriz_final)
+    #np.random.shuffle(matriz_final)
     
     num_entradas = int(num_filas / num_particiones)
     resto = num_entradas % num_particiones
@@ -62,7 +103,7 @@ def leerFicheroARFF(fichero, num_particiones):
             resto = resto-1
         else:
             array_particiones[-i] = np.empty((1, matriz_final[0].size))
-            
+    
     pos_particion = 0
     i_particiones = np.zeros(num_particiones, np.int)
     for i_clase in tipos_clases:
@@ -102,60 +143,77 @@ def leerFicheroARFF(fichero, num_particiones):
     for i in range(num_particiones):
         print(array_particiones[i])"""
         
-            
     return array_particiones
     
+def tasaReduccion(pesos):
+    num_valores_descartados = 0
+    for i in pesos:
+        if i < min_peso:
+            num_valores_descartados += 1
+    return num_valores_descartados / pesos.size
 
-    
+def tasaClase(distancias, clases):
+    num_elementos = np.size(distancias,0)
+    num_aciertos = 0
+    for i in range(num_elementos):
+        valor_mejor_vecino = sys.float_info.max
+        mejor_vecino = int() 
+        for j in range(num_elementos):
+            if valor_mejor_vecino > distancias[i][j]:
+                if i != j:
+                    valor_mejor_vecino = distancias[i][j]
+                    mejor_vecino = j
+        if clases[i] == clases[mejor_vecino]:
+            num_aciertos += 1
+                
+    return num_aciertos / num_elementos 
+            
     
 def matrizDistancia(datos):
     matriz_distancia = euclidean_distances(datos, datos)
     return matriz_distancia
 
+def clasificador(pesos, matriz):
+    datos = matriz[:, 0:-1]
+    clases = matriz[: , -1]
+    num_elementos = np.size(datos,0)
+    matriz_distancias = np.zeros((num_elementos,num_elementos))
+    inicio_j = 1
+    tasa_reduccion = tasaReduccion(pesos)
+    pesos_sin_min = np.array(pesos)
     
-    
-def RELIEF(training,test):
-    num_valores = training[0].size - 1
-    num_elementos = np.size(training,0)
-    w = np.zeros(num_valores)
-    distancias = matrizDistancia(training[:, 0:-1])
-    
+    for i in range(pesos_sin_min.size):
+        if pesos_sin_min[i] < min_peso:
+            pesos_sin_min[i] = 0
+            
     for i in range(num_elementos):
-        mejor_enemigo = int()
-        valor_enemigo = sys.float_info.max
-        mejor_amigo = int()
-        valor_amigo = sys.float_info.max
-        
-        for j in range(num_elementos):
-            if training[i][-1] == training[j][-1]:
-                if valor_amigo > distancias[i][j]:
-                    if i != j:
-                        valor_amigo = distancias[i][j]
-                        mejor_amigo = j
-                    
-            else:
-                if valor_enemigo > distancias[i][j]:
-                    valor_enemigo = distancias[i][j]
-                    mejor_enemigo = j
-                
-        w = w + np.absolute(training[i, 0:-1]-training[mejor_enemigo, 0:-1]) -\
-        np.absolute(training[i, 0:-1]-training[mejor_amigo, 0:-1]) 
+        for j in range(inicio_j,num_elementos):
+            distancia = 0;
+            """for w in range(pesos.size):
+                if pesos[w] >= min_peso:
+                    resta = datos[i][w] - datos[j][w]
+                    distancia += pesos[w] * (resta * resta)"""
+            distancia = distance.euclidean(datos[i], datos[j], pesos_sin_min)
+            matriz_distancias[i][j] = distancia
+            matriz_distancias[j][i] = distancia
+        inicio_j += 1       
+    tasa_clase = tasaClase(matriz_distancias,clases)
     
-    w_maximo = np.amax(w)
-    for i in range(num_valores):
-        if w[i] < 0:
-            w[i] = 0.0
-        else:
-            w[i] = w[i] / w_maximo 
-    return w       
+    #print("-------------------")
+    #print(matriz_distancias)
+    return tasa_clase, tasa_reduccion
+    #KNeighborsClassifier(metric='wminkowski', p=2, metric_params={'w': pesos})
+    
+     
     
     
     
     
 def main():
     num_particiones = 5
-    particiones = leerFicheroARFF(colopscopy, num_particiones)
-    
+    particiones = leerFicheroARFF(texture, num_particiones)
+    tasa_clase_media = 0
+    tasa_reduccion_media = 0
     training = np.ndarray
     test = np.ndarray
     for i in range(num_particiones):
@@ -179,8 +237,20 @@ def main():
                     #print("training", j)
                     training = np.concatenate((training,particiones[j]), axis = 0)
             
-        pesos = RELIEF(training,test)
+        pesos = RELIEF(training)
+        tasa_acierto, tasa_reduccion = clasificador(pesos, test)
+        print(tasa_acierto)
+        print(tasa_reduccion)
+        print("--------")
+        tasa_clase_media += tasa_acierto;
+        tasa_reduccion_media += tasa_reduccion
+        
+    tasa_clase_media = tasa_clase_media / num_particiones
+    tasa_reduccion_media = tasa_reduccion_media / num_particiones
+    print(tasa_clase_media)
+    print(tasa_reduccion_media)
     
+   
     
 
     
