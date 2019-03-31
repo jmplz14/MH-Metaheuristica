@@ -14,18 +14,23 @@ import sys
 from scipy.spatial import distance,KDTree
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.neighbors import KNeighborsClassifier
+from time import time
 colopscopy = "datos/colposcopy.arff"
 ionosphere = "datos/ionosphere.arff"
 texture = "datos/texture.arff"
 min_peso = 0.2
 num_particiones = 5
+max_vecinos = 15000
+sigma = 0.3
 
     
-def RELIEF(training):
+def RELIEF(training, test):
     num_valores = training[0].size - 1
+    train_datos = training[: , 0:-1];
     num_elementos = np.size(training,0)
     w = np.zeros(num_valores)
-    distancias = matrizDistancia(training[:, 0:-1])
+    distancias = euclidean_distances(train_datos, train_datos)
     #print(distancias)
     
     for i in range(num_elementos):
@@ -45,10 +50,9 @@ def RELIEF(training):
                 if valor_enemigo > distancias[i][j]:
                     valor_enemigo = distancias[i][j]
                     mejor_enemigo = j
-                    
-        w = w + np.absolute(training[i, 0:-1]-training[mejor_enemigo, 0:-1]) -\
-        np.absolute(training[i, 0:-1]-training[mejor_amigo, 0:-1]) 
-    
+
+        w = w + np.absolute(train_datos[i]-train_datos[mejor_enemigo]) -\
+        np.absolute(train_datos[i]-train_datos[mejor_amigo])
     w_maximo = np.amax(w)
     
 
@@ -57,10 +61,135 @@ def RELIEF(training):
             w[i] = 0.0
         else:
             w[i] = w[i] / w_maximo
-            """if(w[i] < min_peso):
-                w[i] = 0"""
-    return w  
+    
+    train_datos = (train_datos * w)[: , w >= min_peso]
+    test_datos = test[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = (test_datos * w)[: , w >= min_peso]
+    test_clases = np.array(test[:, -1], int)
+    num_aciertos = 0
+    clasificador = KNeighborsClassifier(n_neighbors=1)
+    clasificador.fit(train_datos, train_clases)
+    num_muestras = np.size(test_datos,0)
+    for i in range(num_muestras):
+        tipo = clasificador.predict([test_datos[i]])
+        if (tipo == test_clases[i]):
+            num_aciertos += 1
+            
+    
+    tasa_acierto = 100 * (num_aciertos / num_muestras)
+    tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
+    return tasa_acierto, tasa_reduccion
+    
+def k_nn(training,test):
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    
+    num_aciertos = 0;
+    clasificador = KNeighborsClassifier(n_neighbors=1)
+    clasificador.fit(train_datos, train_clases)
+    num_muestras = np.size(test_datos,0)
+    for i in range(num_muestras):
+        tipo = clasificador.predict([test_datos[i]])
+        if( tipo == test_clases[i]):
+            num_aciertos += 1
+    tasa_acierto = 100 * (num_aciertos / num_muestras)
+    return tasa_acierto
 
+def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
+
+    train_datos = (train_datos * w)[: , w >= min_peso]
+    test_datos = (test_datos * w)[: , w >= min_peso]   
+
+    
+    num_aciertos = 0;
+    clasificador = KNeighborsClassifier(n_neighbors=1)
+    clasificador.fit(train_datos, train_clases)
+    num_muestras = np.size(test_datos,0)
+    for i in range(num_muestras):
+        tipo = clasificador.predict([test_datos[i]])
+        if( tipo == test_clases[i]):
+            num_aciertos += 1
+    tasa_acierto = 100 * (num_aciertos / num_muestras)
+    tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
+    return tasa_acierto,tasa_reduccion
+
+def BL(training,test):
+    
+    num_vecinos = 0
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    num_valores = train_datos[0].size
+    w = np.random.rand(num_valores)
+    pos_w = 0
+    sin_mejora = 0
+    max_sin_mejora = 20 * num_valores
+    start_time = time()
+    mejor_valor_w = sys.float_info.min
+    mejor_w = w
+    mejor_tasa_clase = 0
+    mejor_tasa_reduccion = 0
+    num_calculos = 0
+    
+    while num_vecinos < max_vecinos and sin_mejora < max_sin_mejora:
+        cambio = np.random.normal(0.0, sigma, None)
+        w_anterior = w[pos_w]
+        w[pos_w] += cambio
+        if w[pos_w] > 1:
+            w[pos_w] = 1
+        if w[pos_w] < 0:
+            w[pos_w] = 0
+            
+        ##probar a no ejecutar si w no cambia
+        if (w_anterior < min_peso and w[pos_w] < min_peso) or (w_anterior == w[pos_w]):
+            
+             w[pos_w] = w_anterior
+             sin_mejora += 1
+        else:
+            num_calculos += 1;
+            tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)
+            
+            funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
+            """if num_vecinos == 0:
+                print("Inicial",funcion_mejora)"""
+            if mejor_valor_w < funcion_mejora:
+                """print("mejor: ", mejor_valor_w, num_vecinos )
+                print(np.array(w, float))"""
+                mejor_w = w
+                mejor_valor_w = funcion_mejora
+                mejor_tasa_clase = tasa_clase
+                mejor_tasa_reduccion = tasa_reduccion
+                sin_mejora = 0
+            else:
+                w[pos_w] = w_anterior
+                sin_mejora += 1
+         
+             
+            
+        #clasificador2(test_datos, test_clases, w)
+       
+        
+        pos_w = (pos_w + 1) % num_valores
+        num_vecinos += 1
+
+    elapsed_time = time() - start_time    
+    print(elapsed_time)
+    print("Mejor w", mejor_valor_w,mejor_tasa_clase,mejor_tasa_reduccion)
+    print("numero vecinos generados: ", num_vecinos)
+    print("numero de errores: ", sin_mejora)
+    print("nuemro de calculos: ", num_calculos)
+        
+        
+    
+    
+    
+    
+    
+    
 def leerFicheroCSV(fichero):
     
     datos = np.genfromtxt(fichero, delimiter=',')
@@ -74,8 +203,6 @@ def leerFicheroARFF(fichero, num_particiones):
     #Cargo los ficheros
     data = arff.loadarff(fichero)
     df = pd.DataFrame(data[0])
-    #print(df)
-    #print(RELIEF(df.values))
     #me quedo con la clases
     clase = df.values[: , -1]
     clase_test =  np.array(df.values[: , -1], int)
@@ -94,7 +221,6 @@ def leerFicheroARFF(fichero, num_particiones):
     y = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
 
     skf = StratifiedKFold(n_splits=5)
-    #print(clase_test)
     for train, test in skf.split(datos, clase_test):
         print("--------------------------------------------------")
         print(train)
@@ -106,7 +232,7 @@ def leerFicheroARFF(fichero, num_particiones):
     tipos_clases = np.unique(matriz_final[: , -1])
     num_filas = int(matriz_final.size / matriz_final[0].size)
     #print(num_filas)
-    np.random.shuffle(matriz_final)
+    #np.random.shuffle(matriz_final)
     
     num_entradas = int(num_filas / num_particiones)
     resto = num_entradas % num_particiones
@@ -194,7 +320,7 @@ def leerFicheroARFF2(fichero, num_particiones):
     tipos_clases = np.unique(matriz_final[: , -1])
     num_filas = int(matriz_final.size / matriz_final[0].size)
     #print(num_filas)
-    np.random.shuffle(matriz_final)
+    #np.random.shuffle(matriz_final)
     
     num_entradas = int(num_filas / num_particiones)
     resto = num_entradas % num_particiones
@@ -242,7 +368,7 @@ def tasaReduccion(pesos):
 def tasaClase(distancias, clases):
     num_elementos = np.size(distancias,0)
     num_aciertos = 0
-    
+
     for i in range(num_elementos):
         valor_mejor_vecino = sys.float_info.max
         mejor_vecino = int() 
@@ -262,93 +388,125 @@ def matrizDistancia(datos):
     matriz_distancia = euclidean_distances(datos, datos)
     return matriz_distancia
 
-def clasificador(pesos, matriz):
-    datos = matriz[:, 0:-1]
-    clases = matriz[: , -1]
-    num_elementos = np.size(datos,0)
+def clasificador(pesos, train, test):
+    datos_train = train[:, 0:-1]
+    clases_train = train[: , -1]
+    datos_test = test[:, 0:-1]
+    clases_test = test[: , -1]
+    pesos_sin_min = np.array(pesos)
+    
+    """for i in range(pesos_sin_min.size):
+        if pesos_sin_min[i] < min_peso:
+            pesos_sin_min[i] = 0
+            
+    for i in (np.size(datos_test,0)):
+        distancia_min = euclidean_distances(datos_test[i], datos_train[0])
+        elemento_min = 0"""
+	
+    """n_neighbors = 1
+     
+    knn = KNeighborsClassifier(n_neighbors)
+    knn.fit(datos_train, clases_train)
+    print(knn)
+    print('Accuracy of K-NN classifier on training set: {:.2f}',knn.score(datos_train, clases_train))
+    print('Accuracy of K-NN classifier on test set: {:.2f}', knn.score(datos_test, clases_test))"""
+    num_elementos = np.size(datos_test,0)
     matriz_distancias = np.zeros((num_elementos,num_elementos))
     inicio_j = 1
     tasa_reduccion = tasaReduccion(pesos)
     pesos_sin_min = np.array(pesos)
     
-    for i in range(pesos_sin_min.size):
+    """for i in range(pesos_sin_min.size):
         if pesos_sin_min[i] < min_peso:
-            pesos_sin_min[i] = 0
-            
-    datos_prueba = datos * pesos_sin_min
-    kdtree = KDTree(datos_prueba)
-    matriz_distancias = euclidean_distances(datos,datos,pesos_sin_min)
-    neighbours = kdtree.query(datos_prueba, k=2)[1][:, 1]
-    accuracy = np.mean(clases[neighbours] == clases)
+            pesos_sin_min[i] = 0"""
     
+        
+    datos_prueba = (datos_test * pesos)[:, pesos > 0.2]
+    kdtree = KDTree(datos_prueba)
+    #matriz_distancias = euclidean_distances(datos,datos,pesos_sin_min)
+    neighbours = kdtree.query(datos_prueba, k=2)[1][:, 1]
+    accuracy = np.mean(clases_test[neighbours] == clases_test)
+    #accuracy = np.mean(y[neighbours] == y)
     for i in range(num_elementos):
         for j in range(inicio_j,num_elementos):
             #print(i,j)
             
-            resta = datos[i] - datos[j]
-            distancia = np.sum(pesos_sin_min * (resta * resta))
+            #resta = datos[i] - datos[j]
+            #distancia = np.sum(pesos_sin_min * (resta * resta))
  
-            #distancia = distance.euclidean(datos[i], datos[j], pesos_sin_min)
+            distancia = distance.euclidean(datos[i], datos[j], pesos_sin_min)
             matriz_distancias[i][j] = distancia
             matriz_distancias[j][i] = distancia
         
 
         inicio_j += 1    
     tasa_clase = tasaClase(matriz_distancias,clases)
-    print(accuracy)
+    
     #print("-------------------")
     #print(matriz_distancias)
-    return tasa_clase, tasa_reduccion
+    #return tasa_clase, tasa_reduccion
     #KNeighborsClassifier(metric='wminkowski', p=2, metric_params={'w': pesos})
     
      
+def clasificador2(X_test, y, pesos):
+
+    X_transformed = (X_test * pesos)[:, pesos > 0.2]
+    kdtree = KDTree(X_transformed)
+    neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
+    accuracy = np.mean(y[neighbours] == y)
+    reduction = np.mean(pesos < 0.2)
     
+
     
     
     
 def main():
-
-    particiones = leerFicheroARFF(texture, num_particiones)
+    
     tasa_clase_media = 0
     tasa_reduccion_media = 0
-    training = np.ndarray
-    test = np.ndarray
-    for i in range(num_particiones):
-        if i == 0:
-            training = particiones[1]
-            #print("training", 1)
-            test = particiones[0]
-            #print("test",i)
-            for j in range(2,num_particiones):
-                #print("training", j)
-                training = np.concatenate((training,particiones[j]), axis = 0)
-               
-        else:
-            #print("training", 0)
-            training = particiones[0]
-            for j in range(1,num_particiones):
-                if j == i:
-                    #print("test",i)
-                    test = particiones[j]
-                else:
-                    #print("training", j)
-                    training = np.concatenate((training,particiones[j]), axis = 0)
-        np.random.shuffle(training)
-        np.random.shuffle(test)
-            
-        pesos = RELIEF(training)
     
-        tasa_acierto, tasa_reduccion = clasificador(pesos, test)
-        print(tasa_acierto)
-        print(tasa_reduccion)
-        print("--------")
-        tasa_clase_media += tasa_acierto;
-        tasa_reduccion_media += tasa_reduccion
+    #Cargo los ficheros
+    data = arff.loadarff(texture)
+    df = pd.DataFrame(data[0])
+    distribucion_clases = df.groupby('class').count()
+    clase = df.values[: , -1]
+    
+    clase_test =  np.array(df.values[: , -1], int)
+  
+   
+    
+
+
+    clase = clase.reshape((1,clase.size))
+    #elimino la clase para normalizar la matriz
+    datos = df.set_index("class", drop = True)
+
+    
+    #normalizo
+    min_max_scaler = preprocessing.MinMaxScaler()
+    datos = min_max_scaler.fit_transform(datos)
+    matriz_final = np.concatenate((datos,clase.T),axis=1)
+    #np.random.shuffle(matriz_final)
+    datos = matriz_final[:, 0:-1]
+    clase = matriz_final[: , -1]
+    skf = StratifiedKFold(n_splits=5, shuffle=True)
+    #print(clase_test)
+    r_tasa_clase = 0
+    r_tasa_reduccion = 0
+    knn_tasa_clase = 0;
+    for train, test in skf.split(datos, clase_test):  
+        train_datos = matriz_final[train,:]
+        test_datos = matriz_final[test,:]
         
-    tasa_clase_media = tasa_clase_media / num_particiones
-    tasa_reduccion_media = tasa_reduccion_media / num_particiones
-    print(tasa_clase_media)
-    print(tasa_reduccion_media)
+        tasa_clase, tasa_reduccion = RELIEF(train_datos,test_datos)
+        r_tasa_clase += tasa_clase
+        knn_tasa_clase += k_nn(train_datos, test_datos)
+        
+        BL(train_datos, test_datos)
+        
+    
+    print("Media KNN: ", knn_tasa_clase / num_particiones)
+    print("Media RELIEF: ", r_tasa_clase / num_particiones)
     
    
     
