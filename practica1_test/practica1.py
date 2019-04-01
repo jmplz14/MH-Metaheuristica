@@ -16,6 +16,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.neighbors import KNeighborsClassifier
 from time import time
+
+
 colopscopy = "datos/colposcopy.arff"
 ionosphere = "datos/ionosphere.arff"
 texture = "datos/texture.arff"
@@ -24,11 +26,16 @@ num_particiones = 5
 max_vecinos = 15000
 sigma = 0.3
 
+
+def funcionObjetivo(clase,reduccion):
+    return clase * 0.5 + reduccion * 0.5
     
 def RELIEF(training, test):
     num_valores = training[0].size - 1
     train_datos = training[: , 0:-1];
     num_elementos = np.size(training,0)
+    
+    start_time = time()
     w = np.zeros(num_valores)
     distancias = euclidean_distances(train_datos, train_datos)
     #print(distancias)
@@ -75,18 +82,22 @@ def RELIEF(training, test):
         tipo = clasificador.predict([test_datos[i]])
         if (tipo == test_clases[i]):
             num_aciertos += 1
-            
     
-    tasa_acierto = 100 * (num_aciertos / num_muestras)
-    tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
-    return tasa_acierto, tasa_reduccion
+    datos_medidos = np.zeros(4)
+    
+    datos_medidos[3] = time() - start_time  
+    datos_medidos[0] = 100 * (num_aciertos / num_muestras)
+    datos_medidos[1] = 100 * (w[w < min_peso].size / w.size)
+    datos_medidos[2] = funcionObjetivo(datos_medidos[0], datos_medidos[1])
+    
+    return datos_medidos
     
 def k_nn(training,test):
     train_datos = training[:, 0:-1]
     train_clases = np.array(training[:, -1], int)
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
-    
+    start_time = time()
     num_aciertos = 0;
     clasificador = KNeighborsClassifier(n_neighbors=1)
     clasificador.fit(train_datos, train_clases)
@@ -96,7 +107,15 @@ def k_nn(training,test):
         if( tipo == test_clases[i]):
             num_aciertos += 1
     tasa_acierto = 100 * (num_aciertos / num_muestras)
-    return tasa_acierto
+    tiempo = time() - start_time  
+    funcion = funcionObjetivo(tasa_acierto,0)
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_acierto
+    datos_algoritmo[2] = funcion
+    datos_algoritmo[3] = tiempo
+    
+    return datos_algoritmo
 
 def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
 
@@ -136,6 +155,7 @@ def BL(training,test):
     num_calculos = 0
     
     while num_vecinos < max_vecinos and sin_mejora < max_sin_mejora:
+        num_vecinos += 1
         cambio = np.random.normal(0.0, sigma, None)
         w_anterior = w[pos_w]
         w[pos_w] += cambio
@@ -150,38 +170,36 @@ def BL(training,test):
              w[pos_w] = w_anterior
              sin_mejora += 1
         else:
-            num_calculos += 1;
             tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)
             
             funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
-            """if num_vecinos == 0:
-                print("Inicial",funcion_mejora)"""
+
             if mejor_valor_w < funcion_mejora:
-                """print("mejor: ", mejor_valor_w, num_vecinos )
-                print(np.array(w, float))"""
+                
                 mejor_w = w
                 mejor_valor_w = funcion_mejora
                 mejor_tasa_clase = tasa_clase
                 mejor_tasa_reduccion = tasa_reduccion
                 sin_mejora = 0
+
             else:
                 w[pos_w] = w_anterior
                 sin_mejora += 1
          
              
-            
-        #clasificador2(test_datos, test_clases, w)
        
         
         pos_w = (pos_w + 1) % num_valores
-        num_vecinos += 1
-
-    elapsed_time = time() - start_time    
-    print(elapsed_time)
-    print("Mejor w", mejor_valor_w,mejor_tasa_clase,mejor_tasa_reduccion)
-    print("numero vecinos generados: ", num_vecinos)
-    print("numero de errores: ", sin_mejora)
-    print("nuemro de calculos: ", num_calculos)
+        
+    tiempo = time() - start_time 
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = mejor_tasa_clase
+    datos_algoritmo[1] = mejor_tasa_reduccion
+    datos_algoritmo[2] = tiempo
+    datos_algoritmo[3] = mejor_valor_w * 100
+       
+    
+    return datos_algoritmo
         
         
     
@@ -458,57 +476,100 @@ def clasificador2(X_test, y, pesos):
     
 
     
+def dibujarTabla(datos):
+    
+    for i in range(np.size(datos, 0)-1):
+        datos[-1] = datos[-1] + datos[i]
+    
+    datos[-1] =  datos[-1] / num_particiones
+    index = np.array(["1", "2", "3", "4", "5", "Media"])
+
+    
+   
+    columns = np.array(["Tasa Clase", "Tasa Reduccion", "Función Objetivo", "Tiempo" ])
+    
+    
+    
+    
+    tabla = pd.DataFrame(datos, index ,columns)  
+    
+    print(tabla)
     
     
 def main():
+    for i in range(3):
     
-    tasa_clase_media = 0
-    tasa_reduccion_media = 0
-    
-    #Cargo los ficheros
-    data = arff.loadarff(texture)
-    df = pd.DataFrame(data[0])
-    distribucion_clases = df.groupby('class').count()
-    clase = df.values[: , -1]
-    
-    clase_test =  np.array(df.values[: , -1], int)
-  
-   
-    
-
-
-    clase = clase.reshape((1,clase.size))
-    #elimino la clase para normalizar la matriz
-    datos = df.set_index("class", drop = True)
-
-    
-    #normalizo
-    min_max_scaler = preprocessing.MinMaxScaler()
-    datos = min_max_scaler.fit_transform(datos)
-    matriz_final = np.concatenate((datos,clase.T),axis=1)
-    #np.random.shuffle(matriz_final)
-    datos = matriz_final[:, 0:-1]
-    clase = matriz_final[: , -1]
-    skf = StratifiedKFold(n_splits=5, shuffle=True)
-    #print(clase_test)
-    r_tasa_clase = 0
-    r_tasa_reduccion = 0
-    knn_tasa_clase = 0;
-    for train, test in skf.split(datos, clase_test):  
-        train_datos = matriz_final[train,:]
-        test_datos = matriz_final[test,:]
+        tasa_clase_media = 0
+        tasa_reduccion_media = 0
         
-        tasa_clase, tasa_reduccion = RELIEF(train_datos,test_datos)
-        r_tasa_clase += tasa_clase
-        knn_tasa_clase += k_nn(train_datos, test_datos)
+        #Cargo los ficheros
+        datos_RELIEF = np.zeros((6,4), np.float)
+        datos_BL = np.zeros((6,4))
+        datos_1NN = np.zeros((6,4))
+        print("------------------------")
+        if i == 0:
+            data = arff.loadarff(ionosphere)
+            print("MEDIDAS IONOSPHERE")
+            
+        elif i == 1: 
+            data = arff.loadarff(colopscopy)
+            print("MEDIDAS COLOPSCOPY")
+        else:
+            data = arff.loadarff(texture)
+            print("MEDIDAS TEXTURE")
+            
+        df = pd.DataFrame(data[0])
+        distribucion_clases = df.groupby('class').count()
+        clase = df.values[: , -1]
         
-        BL(train_datos, test_datos)
+        clase_test =  np.array(df.values[: , -1], int)
+      
+       
         
     
-    print("Media KNN: ", knn_tasa_clase / num_particiones)
-    print("Media RELIEF: ", r_tasa_clase / num_particiones)
     
-   
+        clase = clase.reshape((1,clase.size))
+        #elimino la clase para normalizar la matriz
+        datos = df.set_index("class", drop = True)
+    
+        
+        #normalizo
+        min_max_scaler = preprocessing.MinMaxScaler()
+        datos = min_max_scaler.fit_transform(datos)
+        matriz_final = np.concatenate((datos,clase.T),axis=1)
+        #np.random.shuffle(matriz_final)
+        datos = matriz_final[:, 0:-1]
+        clase = matriz_final[: , -1]
+        skf = StratifiedKFold(n_splits=5, shuffle=True)
+        #print(clase_test)
+        r_tasa_clase = 0
+        r_tasa_reduccion = 0
+        knn_tasa_clase = 0;
+        i_particion = 0
+        for train, test in skf.split(datos, clase_test):  
+            train_datos = matriz_final[train,:]
+            test_datos = matriz_final[test,:]
+            
+            datos_RELIEF[i_particion] = RELIEF(train_datos,test_datos)
+
+            datos_1NN[i_particion] = k_nn(train_datos, test_datos)
+            
+            datos_BL[i_particion] = BL(train_datos, test_datos)
+            
+            i_particion += 1
+            
+        
+        #print("Media KNN: ", knn_tasa_clase / num_particiones)
+        print("\nDatos RELIEF\n")
+        dibujarTabla(datos_RELIEF)
+        
+        print("\nDatos 1-NN\n")
+        dibujarTabla(datos_1NN)
+        
+        print("\nDatos BL\n")
+        dibujarTabla(datos_BL)
+        
+        
     
 
     
