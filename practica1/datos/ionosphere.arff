@@ -1,4 +1,4 @@
-﻿@relation ionosphere
+@relation ionosphere
 @attribute 'a01' real
 @attribute 'a02' real
 @attribute 'a03' real
