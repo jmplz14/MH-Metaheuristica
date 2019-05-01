@@ -5,6 +5,7 @@ Created on Tue Mar 26 12:40:29 2019
 
 @author: José Manuel Pérez Lendínez
 """
+import random
 import numpy as np
 from scipy.io import arff
 import pandas as pd
@@ -34,6 +35,10 @@ max_vecinos = 15000
 #valor para la distribucion de la mutacion
 sigma = 0.3
 
+tam_poblacion = 30
+num_evaluaciones = 15000
+porcentaje_cruce = 0.7
+porcentaje_mutacion = 0.001
 #Calcula la funcion objetivo
 def funcionObjetivo(clase,reduccion):
     return clase * 0.5 + reduccion * 0.5
@@ -331,10 +336,14 @@ def dibujarTabla(datos):
     tabla = pd.DataFrame(datos, index ,columns)  
     
     print(tabla)
+
+
+    
+    
+   
     
     
 def main():
-    
     #bucle que me generara los datos con cada uno de los fichero spara 
     for i in range(3):
     
@@ -381,14 +390,13 @@ def main():
         
         #indicla la posicion en la que se almacenaran los datos del algoritmo
         i_particion = 0
-        
+
         #divido los datos de respetando los portcentajes en 5 particones
         skf = StratifiedKFold(n_splits=num_particiones, shuffle=True, random_state=semilla)
         for train, test in skf.split(datos, clase_test):  
             #nos quedamos con los datos de l aparticion de train y de test
             train_datos = matriz_final[train,:]
             test_datos = matriz_final[test,:]
-            
             #Ejecutamos y guardamos los datos para cada algoritmo
             datos_RELIEF[i_particion] = RELIEF(train_datos,test_datos)
 
