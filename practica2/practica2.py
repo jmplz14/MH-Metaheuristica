@@ -567,7 +567,28 @@ def AGG_Aritmetico(training, test):
     datos_algoritmo[3] = tiempo
             
     return datos_algoritmo
-        
+#devuelve en 0 el menor y en 1 el segundo menor
+def obtenerDosMenores(eval_poblacion):
+    pos_menores = [0,0]
+    
+    if(eval_poblacion[0] < eval_poblacion[1]):
+        pos_menores[0] = 0
+        pos_menores[1] = 1
+    else:
+        pos_menores[0] = 1
+        pos_menores[1] = 0
+    
+    for i in range(2,eval_poblacion.size):
+        if(eval_poblacion[i] < eval_poblacion[pos_menores[1]]):
+            if(eval_poblacion[i] < eval_poblacion[pos_menores[0]]):
+                pos_menores[1] = pos_menores[0] 
+                pos_menores[0] = i
+            else:
+                pos_menores[1] = i                    
+                                
+    return pos_menores
+    
+     
 def AGE_BLX(training, test):
     train_datos = training[:, 0:-1]
     train_clases = np.array(training[:, -1], int)
@@ -576,17 +597,15 @@ def AGE_BLX(training, test):
     
     num_pesos = np.size(train_datos,1)
     
-    num_mutaciones = int(1/(porcentaje_mutacion * (tam_poblacion*num_pesos)))
-    num_iteraciones =  0
+    prob_mutacion_gen = porcentaje_mutacion * num_pesos
     
     start_time = time()
     
     poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
     eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
     t = tam_poblacion
-    mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
-    w_mejor = poblacion[mejor_actual]
-    w_mejor_valor = eval_poblacion[mejor_actual]
+    
+
     
     while t < num_evaluaciones :
         
@@ -594,6 +613,16 @@ def AGE_BLX(training, test):
         
              
         nueva_poblacion[0], nueva_poblacion[1] = cruceBLX(nueva_poblacion[0], nueva_poblacion[1], sigma)
+        
+        mutacion = np.random.uniform(0,1,2)
+        
+        if(mutacion[0] <= prob_mutacion_gen):
+            pos_gen = np.random.randint(0,num_pesos)
+            nueva_poblacion[0] = mutarGen(nueva_poblacion[0], pos_gen)
+
+        if(mutacion[1] <= prob_mutacion_gen):
+            pos_gen = np.random.randint(0,num_pesos)
+            nueva_poblacion[1] = mutarGen(nueva_poblacion[1], pos_gen)
             
         tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(nueva_poblacion[0], train_datos, train_clases)
         valor_poblacion[0] = funcion_objetivo
@@ -604,30 +633,28 @@ def AGE_BLX(training, test):
         t += 2
         
         
-            
-        for i in range(num_mutaciones):
-            pos_individuo = np.random.randint(0,tam_poblacion)
-            pos_gen = np.random.randint(0,num_pesos)
-            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
-            
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
-            eval_poblacion[pos_individuo] = funcion_objetivo
-            t += 1
+        pos_menores = obtenerDosMenores(eval_poblacion);
         
-        mejor_actual = obtenerPosMejorSolucion(eval_poblacion)
+        if(valor_poblacion[0] > eval_poblacion[pos_menores[0]]):
+            poblacion[pos_menores[0]] = nueva_poblacion[0]
+            eval_poblacion[pos_menores[0]] = valor_poblacion[0]
+            if(valor_poblacion[0] > eval_poblacion[pos_menores[1]]):
+                auxiliar = pos_menores[0];
+                pos_menores[0] = pos_menores[1]
+                pos_menores[1] = auxiliar
+                
         
-        if(w_mejor_valor > eval_poblacion[mejor_actual]):
-            peor_individuo = obtenerPosPeorSolucion(eval_poblacion)
-            poblacion[peor_individuo] = w_mejor
-            eval_poblacion[peor_individuo] = w_mejor_valor
-
-        else:
-            w_mejor = poblacion[mejor_actual]
-            w_mejor_valor = eval_poblacion[mejor_actual]
+        
+        if(valor_poblacion[1] > eval_poblacion[pos_menores[0]]):
+            poblacion[pos_menores[0]] = nueva_poblacion[1]
+            eval_poblacion[pos_menores[0]] = valor_poblacion[1]
+            
             
             
             
         
+    mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
+    w_mejor = poblacion[mejor_actual]
     
     tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
@@ -650,56 +677,66 @@ def AGE_Aritmetico(training, test):
     
     num_pesos = np.size(train_datos,1)
     
-    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion*num_pesos))
+    prob_mutacion_gen = porcentaje_mutacion * num_pesos
     
     start_time = time()
     
     poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
     eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
     t = tam_poblacion
-    mejor_solucion = obtenerPosMejorSolucion(eval_poblacion);
+    
+
+    
     while t < num_evaluaciones :
         
+        nueva_poblacion, valor_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
         
-        nueva_poblacion, valores_nuevos = torneoBinario(poblacion, eval_poblacion, 2)
+             
+        nueva_poblacion[0], nueva_poblacion[1] = cruceAritmetico(nueva_poblacion[0], nueva_poblacion[1], sigma)
         
-          
-        nueva_poblacion[0], nueva_poblacion[1] = cruceAritmetico(nueva_poblacion[0], nueva_poblacion[1])
+        mutacion = np.random.uniform(0,1,2)
+        
+        if(mutacion[0] <= prob_mutacion_gen):
+            pos_gen = np.random.randint(0,num_pesos)
+            nueva_poblacion[0] = mutarGen(nueva_poblacion[0], pos_gen)
+
+        if(mutacion[1] <= prob_mutacion_gen):
+            pos_gen = np.random.randint(0,num_pesos)
+            nueva_poblacion[1] = mutarGen(nueva_poblacion[1], pos_gen)
             
         tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(nueva_poblacion[0], train_datos, train_clases)
-        valores_nuevos[0] = funcion_objetivo
-            
+        valor_poblacion[0] = funcion_objetivo
+        
         tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(nueva_poblacion[1], train_datos, train_clases)
-        valores_nuevos[1] = funcion_objetivo
+        valor_poblacion[1] = funcion_objetivo
             
         t += 2
         
         
-            
-        for i in range(num_mutaciones):
-            pos_individuo = np.random.randint(0,tam_poblacion)
-            pos_gen = np.random.randint(0,num_pesos)
-            nueva_poblacion[pos_individuo] = mutarGen(nueva_poblacion[pos_individuo], pos_gen)
-            
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(nueva_poblacion[pos_individuo], train_datos, train_clases)
-            valores_nuevos[pos_individuo] = funcion_objetivo
-            t += 1
+        pos_menores = obtenerDosMenores(eval_poblacion);
         
-        mejor_actual = obtenerPosMejorSolucion(valores_nuevos)
+        if(valor_poblacion[0] > eval_poblacion[pos_menores[0]]):
+            poblacion[pos_menores[0]] = nueva_poblacion[0]
+            eval_poblacion[pos_menores[0]] = valor_poblacion[0]
+            if(valor_poblacion[0] > eval_poblacion[pos_menores[1]]):
+                auxiliar = pos_menores[0];
+                pos_menores[0] = pos_menores[1]
+                pos_menores[1] = auxiliar
+                
         
-        if(valores_nuevos[mejor_actual] < mejor_solucion):
-            peor_individuo = obtenerPosPeorSolucion(valores_nuevos)
-            nueva_poblacion[peor_individuo] = poblacion[mejor_solucion]
-            valores_nuevos[peor_individuo] = eval_poblacion[mejor_solucion]
-            mejor_solucion = peor_individuo
-        else:
-            mejor_solucion = mejor_actual
+        
+        if(valor_poblacion[1] > eval_poblacion[pos_menores[0]]):
+            poblacion[pos_menores[0]] = nueva_poblacion[1]
+            eval_poblacion[pos_menores[0]] = valor_poblacion[1]
             
             
-        poblacion = nueva_poblacion
-        eval_poblacion = valores_nuevos
+            
+            
+        
+    mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
+    w_mejor = poblacion[mejor_actual]
     
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[mejor_solucion], test_datos, test_clases)
+    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
     
     
@@ -710,8 +747,6 @@ def AGE_Aritmetico(training, test):
     datos_algoritmo[3] = tiempo
             
     return datos_algoritmo   
-    
-    
    
     
     
@@ -774,7 +809,7 @@ def main():
             train_datos = matriz_final[train,:]
             test_datos = matriz_final[test,:]
             
-            datos_AGGAritmetico[i_particion] = AGG_Aritmetico(train_datos,test_datos)
+            datos_AGGAritmetico[i_particion] = AGE_BLX(train_datos,test_datos)
             print(datos_AGGAritmetico[i_particion])
             #datos_AGGBLX[i_particion] = AGG_BLX(train_datos,test_datos)
             #print(datos_AGGBLX[i_particion]);
