@@ -16,7 +16,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from time import time
 from sklearn.neighbors import KDTree
-semilla = 14
+semilla = 1
 np.random.seed(semilla)
 #rutas de los ficheros
 colopscopy = "datos/colposcopy.arff"
@@ -49,7 +49,6 @@ def RELIEF(training, test):
   
     #nos quedamos con los datos del training si las clases
     train_datos = training[: , 0:-1];
-    train_clases = np.array(training[:, -1], int)
     num_elementos = np.size(training,0)
     
     start_time = time()
@@ -57,7 +56,7 @@ def RELIEF(training, test):
     #iniciamos el vector de pesos a 0
     num_valores = training[0].size - 1
     w = np.zeros(num_valores)
-
+    
     #creo una matriz de distancias
     distancias = euclidean_distances(train_datos, train_datos)
     #print(distancias)
@@ -105,7 +104,7 @@ def RELIEF(training, test):
     test_clases = np.array(test[:, -1], int)
     
     #tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
-    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
+    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, train_datos, train_clases)
     
     
     datos_medidos = np.zeros(4)
@@ -117,7 +116,6 @@ def RELIEF(training, test):
     datos_medidos[2] = funcionObjetivo(datos_medidos[0], datos_medidos[1])
     
     return datos_medidos
-
 
 """
 Utilzado para el 1-NN donde no tenemos vector de pesos
@@ -339,7 +337,301 @@ def dibujarTabla(datos):
     
     print(tabla)
 
+def inicializarPoblacion(num_individuos,num_genes):
+    #poblacion = np.zeros((num_individuos,num_genes))
+    #for i in range(num_individuos):
+    return np.random.uniform(0,1,(num_individuos, num_genes))
+    
+def torneoBinario(poblacion,valores,num_torneos):
+    num_genes = np.size(poblacion,1)
+    num_individuos = np.size(poblacion,0)
+    nueva_poblacion = np.empty((num_torneos, num_genes))
+    nuevos_valores = np.empty(num_torneos)
+    
+    for i in range(num_torneos):
+        pos = random.sample(range(num_individuos), 2)
+        if(valores[pos[0]] > valores[pos[1]]):
+            nueva_poblacion[i] = np.copy(poblacion[pos[0]])
+            nuevos_valores[i] = valores[pos[0]]
+        else:
+            nueva_poblacion[i] = np.copy(poblacion[pos[1]])
+            nuevos_valores[i] = valores[pos[1]]
+    
+    return nueva_poblacion,nuevos_valores
+    
+    
 
+def evaluarPoblacion(X, y, poblacion):
+    num_individuos = np.size(poblacion,0)
+    valores = np.zeros(num_individuos)
+    for i in range(num_individuos):
+        tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], X, y)
+        valores[i] = funcion_objetivo
+
+    return valores
+        
+    
+def cruceBLX(cromosoma1,cromosoma2,alfa):
+    num_genes = cromosoma1.size  
+    hijo1 = np.empty(num_genes)
+    hijo2 = np.empty(num_genes)
+    for j in range(num_genes): 
+        cmin = min(cromosoma1[j],cromosoma2[j])
+        cmax = max(cromosoma1[j],cromosoma2[j])
+        I = cmax - cmin
+        h = np.random.uniform(cmin-I*alfa,cmax+I*alfa,2)
+            
+        if h[0] < 0:
+            h[0] = 0
+        if h[1] < 0:
+            h[0] = 0
+        if h[0] > 1:
+            h[0] = 1
+        if h[1] > 1:
+            h[1] = 1
+            
+                
+        hijo1[j] = h[0]
+        hijo2[j] = h[1]
+    
+    return hijo1, hijo2
+
+def cruceAritmetico(cromosoma1,cromosoma2):
+    ponderado = np.random.uniform(0,1,1)
+    hijo1 = (ponderado * cromosoma1) + ((1-ponderado) * cromosoma2)
+    hijo2 = ((1-ponderado) * cromosoma1) + ( ponderado * cromosoma2)
+    
+    return hijo1, hijo2
+            
+def mutarGen(pesos, posicion):
+    mutacion = np.random.normal(0.0, sigma, None)
+    pesos[posicion] += mutacion
+    
+    return pesos
+        
+def obtenerPosMejorSolucion(valores):
+    mejor_pos = 0
+    
+    for i in range(1,valores.size):
+        if valores[i] > mejor_pos:
+            mejor_pos = i
+
+    return mejor_pos
+
+def obtenerPosPeorSolucion(valores):
+    peor_pos = 0
+    
+    for i in range(1,valores.size):
+        if valores[i] < peor_pos:
+            peor_pos = i
+
+    return peor_pos
+    
+
+def AGG_BLX(training, test):
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    
+    num_pesos = np.size(train_datos,1)
+    
+    num_cruces = int(porcentaje_cruce * (tam_poblacion/2))
+    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion*num_pesos))
+    
+    start_time = time()
+    
+    poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
+    eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
+    t = tam_poblacion
+    mejor_solucion = obtenerPosMejorSolucion(eval_poblacion);
+    while t < num_evaluaciones :
+        
+        
+        nueva_poblacion, valores_nuevos = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
+        
+        for i in range(num_cruces):       
+            nueva_poblacion[i*2], nueva_poblacion[i*2 + 1] = cruceBLX(nueva_poblacion[i*2], nueva_poblacion[i*2 + 1], sigma)
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
+            valores_nuevos[i*2] = funcion_objetivo
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
+            valores_nuevos[i*2 + 1] = funcion_objetivo
+            
+            t += 2
+            
+        for i in range(num_mutaciones):
+            pos_individuo = np.random.randint(0,tam_poblacion)
+            pos_gen = np.random.randint(0,num_pesos)
+            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
+            valores_nuevos[pos_individuo] = funcion_objetivo
+            t += 1
+        
+        mejor_actual = obtenerPosMejorSolucion(valores_nuevos)
+        
+        if(mejor_actual < mejor_solucion):
+            peor_individuo = obtenerPosPeorSolucion(valores_nuevos)
+            nueva_poblacion[peor_individuo] = poblacion[mejor_solucion]
+            valores_nuevos[peor_individuo] = eval_poblacion[mejor_solucion]
+            mejor_solucion = peor_individuo
+        else:
+            mejor_solucion = mejor_actual
+            
+            
+            
+        poblacion = nueva_poblacion
+        eval_poblacion = valores_nuevos
+    
+    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[mejor_solucion], test_datos, test_clases)
+    tiempo = time() - start_time 
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo
+        
+def AGG_Aritmetico(training, test):
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    
+    num_pesos = np.size(train_datos,1)
+    
+    num_cruces = int(porcentaje_cruce * (tam_poblacion/2))
+    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion*num_pesos))
+    
+    start_time = time()
+    
+    poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
+    eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
+    t = tam_poblacion
+    mejor_solucion = obtenerPosMejorSolucion(eval_poblacion);
+    while t < num_evaluaciones :
+        
+        
+        nueva_poblacion, valores_nuevos = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
+        
+        for i in range(num_cruces):       
+            nueva_poblacion[i*2], nueva_poblacion[i*2 + 1] = cruceAritmetico(nueva_poblacion[i*2], nueva_poblacion[i*2 + 1])
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
+            valores_nuevos[i*2] = funcion_objetivo
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
+            valores_nuevos[i*2 + 1] = funcion_objetivo
+            
+            t += 2
+            
+        for i in range(num_mutaciones):
+            pos_individuo = np.random.randint(0,tam_poblacion)
+            pos_gen = np.random.randint(0,num_pesos)
+            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
+            valores_nuevos[pos_individuo] = funcion_objetivo
+            t += 1
+        
+        mejor_actual = obtenerPosMejorSolucion(valores_nuevos)
+        
+        if(mejor_actual < mejor_solucion):
+            peor_individuo = obtenerPosPeorSolucion(valores_nuevos)
+            nueva_poblacion[peor_individuo] = poblacion[mejor_solucion]
+            valores_nuevos[peor_individuo] = eval_poblacion[mejor_solucion]
+            mejor_solucion = peor_individuo
+        else:
+            mejor_solucion = mejor_actual
+            
+            
+        poblacion = nueva_poblacion
+        eval_poblacion = valores_nuevos
+    
+    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[mejor_solucion], test_datos, test_clases)
+    tiempo = time() - start_time 
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo        
+
+def AGE_Aritmetico(training, test):
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    
+    num_pesos = np.size(train_datos,1)
+    
+    num_cruces = int(porcentaje_cruce * (tam_poblacion/2))
+    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion*num_pesos))
+    
+    start_time = time()
+    
+    poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
+    eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
+    t = tam_poblacion
+    mejor_solucion = obtenerPosMejorSolucion(eval_poblacion);
+    while t < num_evaluaciones :
+        
+        
+        nueva_poblacion, valores_nuevos = torneoBinario(poblacion, eval_poblacion, 2)
+        
+          
+            nueva_poblacion[0], nueva_poblacion[1] = cruceAritmetico(nueva_poblacion[0], nueva_poblacion[1])
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
+            valores_nuevos[i*2] = funcion_objetivo
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
+            valores_nuevos[i*2 + 1] = funcion_objetivo
+            
+            t += 2
+            
+        for i in range(num_mutaciones):
+            pos_individuo = np.random.randint(0,tam_poblacion)
+            pos_gen = np.random.randint(0,num_pesos)
+            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
+            
+            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
+            valores_nuevos[pos_individuo] = funcion_objetivo
+            t += 1
+        
+        mejor_actual = obtenerPosMejorSolucion(valores_nuevos)
+        
+        if(mejor_actual < mejor_solucion):
+            peor_individuo = obtenerPosPeorSolucion(valores_nuevos)
+            nueva_poblacion[peor_individuo] = poblacion[mejor_solucion]
+            valores_nuevos[peor_individuo] = eval_poblacion[mejor_solucion]
+            mejor_solucion = peor_individuo
+        else:
+            mejor_solucion = mejor_actual
+            
+            
+        poblacion = nueva_poblacion
+        eval_poblacion = valores_nuevos
+    
+    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[mejor_solucion], test_datos, test_clases)
+    tiempo = time() - start_time 
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo   
     
     
    
@@ -352,9 +644,13 @@ def main():
 
         
         #Creo la matriz donde alamacenare los valores  cada algoritmo
+        """
         datos_RELIEF = np.zeros((6,4), np.float)
         datos_BL = np.zeros((6,4))
         datos_1NN = np.zeros((6,4))
+        """
+        datos_AGGBLX = np.zeros((6,4))
+        datos_AGGAritmetico = np.zeros((6,4))
         print("------------------------")
         
         #Cargo uno de los ficheros
@@ -399,12 +695,20 @@ def main():
             #nos quedamos con los datos de l aparticion de train y de test
             train_datos = matriz_final[train,:]
             test_datos = matriz_final[test,:]
-            #Ejecutamos y guardamos los datos para cada algoritmo
+            
+            datos_AGGAritmetico[i_particion] = AGG_Aritmetico(train_datos,test_datos)
+            print(datos_AGGAritmetico[i_particion])
+            """datos_AGGBLX[i_particion] = AGG_BLX(train_datos,test_datos)
+            print(datos_AGGBLX[i_particion]);"""
+            """
+            Ejecutamos y guardamos los datos para cada algoritmo
             datos_RELIEF[i_particion] = RELIEF(train_datos,test_datos)
 
             datos_1NN[i_particion] = k_nn(train_datos, test_datos)
             
             datos_BL[i_particion] = BL(train_datos, test_datos)
+            """
+            
             
 
             
@@ -412,6 +716,7 @@ def main():
             
         
         #mostramos los datos al terminar los tres algoritmos
+        """
         print("\nDatos RELIEF\n")
         dibujarTabla(datos_RELIEF)
         
@@ -420,7 +725,9 @@ def main():
         
         print("\nDatos BL\n")
         dibujarTabla(datos_BL)
-        
+        """
+        print("\nDatos AGGBLX\n")
+        dibujarTabla(datos_AGGAritmetico)
         
     
 
