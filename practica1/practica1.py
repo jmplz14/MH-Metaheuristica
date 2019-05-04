@@ -249,9 +249,8 @@ def BL(training,test):
             
     #funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
     mejor_valor_w = funcion_mejora
-    mejor_w = w
-    mejor_tasa_clase = tasa_clase
-    mejor_tasa_reduccion = tasa_reduccion
+    #mejor_w = w
+
 
     
     while num_vecinos < max_vecinos and sin_mejora < max_sin_mejora:
@@ -289,10 +288,9 @@ def BL(training,test):
             #si mejora almacenamos esos valores
             if mejor_valor_w < funcion_mejora:
 
-                mejor_w = w
+                #mejor_w = w
                 mejor_valor_w = funcion_mejora
-                mejor_tasa_clase = tasa_clase
-                mejor_tasa_reduccion = tasa_reduccion
+
                 sin_mejora = 0
                 
             #si no mejora se descarta y contamos unos sin mejora
@@ -312,7 +310,7 @@ def BL(training,test):
     datos_algoritmo[1] = mejor_tasa_reduccion
     datos_algoritmo[2] = mejor_valor_w
     datos_algoritmo[3] = tiempo"""
-    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(mejor_w, test_datos, test_clases)
+    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
     datos_algoritmo[0] = tasa_clase
     datos_algoritmo[1] = tasa_reduccion
     datos_algoritmo[2] = funcion_mejora
