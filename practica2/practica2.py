@@ -5,7 +5,7 @@ Created on Tue Mar 26 12:40:29 2019
 
 @author: José Manuel Pérez Lendínez
 """
-import random
+
 import numpy as np
 from scipy.io import arff
 import pandas as pd
@@ -326,13 +326,18 @@ def torneoBinario(poblacion,valores,num_torneos):
     nuevos_valores = np.empty(num_torneos)
     
     for i in range(num_torneos):
-        pos = random.sample(range(num_individuos), 2)
+        pos = np.random.randint(0,num_individuos,2)
+        
+
+        
         if(valores[pos[0]] > valores[pos[1]]):
             nueva_poblacion[i] = np.copy(poblacion[pos[0]])
             nuevos_valores[i] = valores[pos[0]]
+
         else:
             nueva_poblacion[i] = np.copy(poblacion[pos[1]])
             nuevos_valores[i] = valores[pos[1]]
+
     
     return nueva_poblacion,nuevos_valores
     
@@ -361,7 +366,7 @@ def cruceBLX(cromosoma1,cromosoma2,alfa):
         if h[0] < 0:
             h[0] = 0
         if h[1] < 0:
-            h[0] = 0
+            h[1] = 0
         if h[0] > 1:
             h[0] = 1
         if h[1] > 1:
@@ -374,36 +379,42 @@ def cruceBLX(cromosoma1,cromosoma2,alfa):
     return hijo1, hijo2
 
 def cruceAritmetico(cromosoma1,cromosoma2):
-    ponderado = np.random.uniform(0,1,1)
+    ponderado = np.random.rand(cromosoma1.size)
     hijo1 = (ponderado * cromosoma1) + ((1-ponderado) * cromosoma2)
     hijo2 = ((1-ponderado) * cromosoma1) + ( ponderado * cromosoma2)
-    
+
     return hijo1, hijo2
             
 def mutarGen(pesos, posicion):
     mutacion = np.random.normal(0.0, sigma, None)
     pesos[posicion] += mutacion
     
+    if pesos[posicion] > 1:
+        pesos[posicion] = 1
+        
+    if pesos[posicion] < 0:
+        pesos[posicion] = 0
     return pesos
         
 def obtenerPosMejorSolucion(valores):
-    mejor_pos = 0
+    mejor_pos = np.argmax(valores)
     
-    for i in range(1,valores.size):
+    """for i in range(1,valores.size):
         if valores[i] > mejor_pos:
             mejor_pos = i
-
+    """
     return mejor_pos
 
 def obtenerPosPeorSolucion(valores):
-    peor_pos = 0
+    peor_pos = np.argmin(valores)
     
-    for i in range(1,valores.size):
+    """for i in range(1,valores.size):
         if valores[i] < peor_pos:
             peor_pos = i
-
+    """
     return peor_pos
     
+
 
 def AGG_BLX(training, test):
     train_datos = training[:, 0:-1]
@@ -424,21 +435,20 @@ def AGG_BLX(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
     w_mejor_valor = eval_poblacion[mejor_actual]
+    
     while t < num_evaluaciones :
         
-        poblacion, eval_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
         
+        poblacion, eval_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
+
         for i in range(num_cruces):       
             poblacion[i*2], poblacion[i*2 + 1] = cruceBLX(poblacion[i*2], poblacion[i*2 + 1], sigma)
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
-            eval_poblacion[i*2] = funcion_objetivo
+            eval_poblacion[i*2] = -1
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
-            eval_poblacion[i*2 + 1] = funcion_objetivo
+            eval_poblacion[i*2 + 1] = -1
             
-            t += 2
-            
+
         for i in range(num_mutaciones):
             pos_individuo = np.random.randint(0,tam_poblacion)
             pos_gen = np.random.randint(0,num_pesos)
@@ -447,19 +457,29 @@ def AGG_BLX(training, test):
             tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
             eval_poblacion[pos_individuo] = funcion_objetivo
             t += 1
+            
+        for i in range(num_cruces):
+            if eval_poblacion[i] == -1:
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+                
         
         mejor_actual = obtenerPosMejorSolucion(eval_poblacion)
         
+        
         if(w_mejor_valor > eval_poblacion[mejor_actual]):
+
             peor_individuo = obtenerPosPeorSolucion(eval_poblacion)
             poblacion[peor_individuo] = w_mejor
             eval_poblacion[peor_individuo] = w_mejor_valor
 
         else:
+
             w_mejor = poblacion[mejor_actual]
             w_mejor_valor = eval_poblacion[mejor_actual]
             
-            
+
             
         
     
@@ -474,7 +494,7 @@ def AGG_BLX(training, test):
     datos_algoritmo[3] = tiempo
             
     return datos_algoritmo
-        
+     
 def AGG_Aritmetico(training, test):
     train_datos = training[:, 0:-1]
     train_clases = np.array(training[:, -1], int)
@@ -490,6 +510,7 @@ def AGG_Aritmetico(training, test):
     
     poblacion = inicializarPoblacion(tam_poblacion,num_pesos)
     eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion);
+
     t = tam_poblacion
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
@@ -497,18 +518,17 @@ def AGG_Aritmetico(training, test):
     while t < num_evaluaciones :
         
         poblacion, eval_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
-        
-        for i in range(num_cruces):       
+
+        for i in range(num_cruces):
+
             poblacion[i*2], poblacion[i*2 + 1] = cruceAritmetico(poblacion[i*2], poblacion[i*2 + 1])
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
-            eval_poblacion[i*2] = funcion_objetivo
+            eval_poblacion[i*2] = -1
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
-            eval_poblacion[i*2 + 1] = funcion_objetivo
+            eval_poblacion[i*2 + 1] = -1
             
-            t += 2
             
+   
         for i in range(num_mutaciones):
             pos_individuo = np.random.randint(0,tam_poblacion)
             pos_gen = np.random.randint(0,num_pesos)
@@ -518,7 +538,14 @@ def AGG_Aritmetico(training, test):
             eval_poblacion[pos_individuo] = funcion_objetivo
             t += 1
         
+        for i in range(num_cruces):
+            if eval_poblacion[i] == -1:
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+        
         mejor_actual = obtenerPosMejorSolucion(eval_poblacion)
+
         
         if(w_mejor_valor > eval_poblacion[mejor_actual]):
             peor_individuo = obtenerPosPeorSolucion(eval_poblacion)
@@ -528,7 +555,7 @@ def AGG_Aritmetico(training, test):
         else:
             w_mejor = poblacion[mejor_actual]
             w_mejor_valor = eval_poblacion[mejor_actual]
-            
+
             
             
         
@@ -588,18 +615,19 @@ def AGE_BLX(training, test):
     
     while t < num_evaluaciones :
         
-        nueva_poblacion, valor_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
+        nueva_poblacion, valor_poblacion = torneoBinario(poblacion, eval_poblacion, 2)
         
              
         nueva_poblacion[0], nueva_poblacion[1] = cruceBLX(nueva_poblacion[0], nueva_poblacion[1], sigma)
         
         mutacion = np.random.uniform(0,1,2)
-        
+
         if(mutacion[0] <= prob_mutacion_gen):
             pos_gen = np.random.randint(0,num_pesos)
             nueva_poblacion[0] = mutarGen(nueva_poblacion[0], pos_gen)
 
         if(mutacion[1] <= prob_mutacion_gen):
+
             pos_gen = np.random.randint(0,num_pesos)
             nueva_poblacion[1] = mutarGen(nueva_poblacion[1], pos_gen)
             
@@ -613,6 +641,7 @@ def AGE_BLX(training, test):
         
         
         pos_menores = obtenerDosMenores(eval_poblacion);
+
         
         if(valor_poblacion[0] > eval_poblacion[pos_menores[0]]):
             poblacion[pos_menores[0]] = nueva_poblacion[0]
@@ -668,10 +697,10 @@ def AGE_Aritmetico(training, test):
     
     while t < num_evaluaciones :
         
-        nueva_poblacion, valor_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion)
+        nueva_poblacion, valor_poblacion = torneoBinario(poblacion, eval_poblacion, 2)
         
              
-        nueva_poblacion[0], nueva_poblacion[1] = cruceAritmetico(nueva_poblacion[0], nueva_poblacion[1], sigma)
+        nueva_poblacion[0], nueva_poblacion[1] = cruceAritmetico(nueva_poblacion[0], nueva_poblacion[1])
         
         mutacion = np.random.uniform(0,1,2)
         
@@ -714,7 +743,7 @@ def AGE_Aritmetico(training, test):
         
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
-    print("busquedas realizadas=", num_busquedas_realizadas)
+
     tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
     
@@ -738,7 +767,7 @@ def memeticoBusquedaTotal(training, test):
     num_pesos = np.size(train_datos,1)
     
     num_cruces = int(porcentaje_cruce * (tam_poblacion_memeticos/2))
-    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion_memeticos*num_pesos))
+    prob_mutacion_gen = num_pesos * porcentaje_mutacion
     
     start_time = time()
     
@@ -749,7 +778,7 @@ def memeticoBusquedaTotal(training, test):
     w_mejor = poblacion[mejor_actual]
     w_mejor_valor = eval_poblacion[mejor_actual]
     num_busquedas_realizadas = 0
-    num_generacion = 0
+    num_generacion = 1
     while t < num_evaluaciones :
         
         poblacion, eval_poblacion = torneoBinario(poblacion, eval_poblacion, tam_poblacion_memeticos)
@@ -757,22 +786,29 @@ def memeticoBusquedaTotal(training, test):
         for i in range(num_cruces):       
             poblacion[i*2], poblacion[i*2 + 1] = cruceBLX(poblacion[i*2], poblacion[i*2 + 1], sigma)
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
-            eval_poblacion[i*2] = funcion_objetivo
+           
+            eval_poblacion[i*2] = -1
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
-            eval_poblacion[i*2 + 1] = funcion_objetivo
             
-            t += 2
+            eval_poblacion[i*2 + 1] = -1
             
-        for i in range(num_mutaciones):
-            pos_individuo = np.random.randint(0,tam_poblacion_memeticos)
-            pos_gen = np.random.randint(0,num_pesos)
-            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
-            eval_poblacion[pos_individuo] = funcion_objetivo
-            t += 1
+            
+        mutacion = np.random.uniform(0,1,tam_poblacion_memeticos)
+        
+        for i in range(tam_poblacion_memeticos):
+            if(mutacion[i] <= prob_mutacion_gen):
+                pos_gen = np.random.randint(0,num_pesos)
+                poblacion[i] = mutarGen(poblacion[i], pos_gen)
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+            
+        for i in range(num_cruces):
+            if eval_poblacion[i] == -1:
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
         
         
         if num_generacion % 10 == 0:
@@ -796,7 +832,6 @@ def memeticoBusquedaTotal(training, test):
             
         num_generacion += 1   
         
-    print("busquedas realizadas=", num_busquedas_realizadas)
     tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
     
@@ -818,8 +853,7 @@ def memeticoProbabilidad(training, test):
     num_pesos = np.size(train_datos,1)
     
     num_cruces = int(porcentaje_cruce * (tam_poblacion_memeticos/2))
-    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion_memeticos*num_pesos))
-    
+    prob_mutacion_gen = num_pesos * porcentaje_mutacion
     start_time = time()
     
     poblacion = inicializarPoblacion(tam_poblacion_memeticos,num_pesos)
@@ -837,24 +871,30 @@ def memeticoProbabilidad(training, test):
         for i in range(num_cruces):       
             poblacion[i*2], poblacion[i*2 + 1] = cruceBLX(poblacion[i*2], poblacion[i*2 + 1], sigma)
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
-            eval_poblacion[i*2] = funcion_objetivo
+            eval_poblacion[i*2] = -1
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
-            eval_poblacion[i*2 + 1] = funcion_objetivo
+            eval_poblacion[i*2 + 1] = -1
             
-            t += 2
-            
-        for i in range(num_mutaciones):
-            pos_individuo = np.random.randint(0,tam_poblacion_memeticos)
-            pos_gen = np.random.randint(0,num_pesos)
-            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
-            
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
-            eval_poblacion[pos_individuo] = funcion_objetivo
-            t += 1
+
+        mutacion = np.random.uniform(0,1,tam_poblacion_memeticos)
         
+        for i in range(tam_poblacion_memeticos):
+            if(mutacion[i] <= prob_mutacion_gen):
+                pos_gen = np.random.randint(0,num_pesos)
+                poblacion[i] = mutarGen(poblacion[i], pos_gen)
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+                
+                
+
         
+        for i in range(num_cruces):
+            if eval_poblacion[i] == -1:
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+                
         if num_generacion % 10 == 0:
             prob_busqueda = np.random.uniform(0,1,tam_poblacion_memeticos)
             for i in range(tam_poblacion_memeticos):
@@ -878,7 +918,6 @@ def memeticoProbabilidad(training, test):
             
         num_generacion += 1   
         
-    print("busquedas realizadas=", num_busquedas_realizadas)
     tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
     
@@ -891,7 +930,7 @@ def memeticoProbabilidad(training, test):
             
     return datos_algoritmo 
 
-def memeticoBusquedaMejor(training, test):
+def memeticoBusquedaMejores(training, test):
     train_datos = training[:, 0:-1]
     train_clases = np.array(training[:, -1], int)
     test_datos = test[:, 0:-1]
@@ -900,7 +939,7 @@ def memeticoBusquedaMejor(training, test):
     num_pesos = np.size(train_datos,1)
     
     num_cruces = int(porcentaje_cruce * (tam_poblacion_memeticos/2))
-    num_mutaciones = int(porcentaje_mutacion * (tam_poblacion_memeticos*num_pesos))
+    prob_mutacion_gen = num_pesos * porcentaje_mutacion
     
     start_time = time()
     
@@ -910,7 +949,7 @@ def memeticoBusquedaMejor(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
     w_mejor_valor = eval_poblacion[mejor_actual]
-    num_busquedas_realizadas = 0
+
     num_generacion = 0
     while t < num_evaluaciones :
         
@@ -919,30 +958,38 @@ def memeticoBusquedaMejor(training, test):
         for i in range(num_cruces):       
             poblacion[i*2], poblacion[i*2 + 1] = cruceBLX(poblacion[i*2], poblacion[i*2 + 1], sigma)
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2], train_datos, train_clases)
-            eval_poblacion[i*2] = funcion_objetivo
+            eval_poblacion[i*2] = -1
             
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i*2 + 1], train_datos, train_clases)
-            eval_poblacion[i*2 + 1] = funcion_objetivo
+            eval_poblacion[i*2 + 1] = -1
             
-            t += 2
-            
-        for i in range(num_mutaciones):
-            pos_individuo = np.random.randint(0,tam_poblacion_memeticos)
-            pos_gen = np.random.randint(0,num_pesos)
-            poblacion[pos_individuo] = mutarGen(poblacion[pos_individuo], pos_gen)
-            
-            tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[pos_individuo], train_datos, train_clases)
-            eval_poblacion[pos_individuo] = funcion_objetivo
-            t += 1
-        
-        
-        if num_generacion % 10 == 0:
-            mejor_individuo = obtenerPosMejorSolucion(eval_poblacion);
-            num_busquedas_realizadas += 1
 
-            poblacion[mejor_individuo], eval_poblacion[mejor_individuo] , eval_realizadas = BL(train_datos,train_clases,poblacion[mejor_individuo],eval_poblacion[mejor_individuo])
-            t += eval_realizadas
+            
+        mutacion = np.random.uniform(0,1,tam_poblacion_memeticos)
+        
+        for i in range(tam_poblacion_memeticos):
+            if(mutacion[i] <= prob_mutacion_gen):
+                pos_gen = np.random.randint(0,num_pesos)
+                poblacion[i] = mutarGen(poblacion[i], pos_gen)
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+        
+        for i in range(num_cruces):
+            if eval_poblacion[i] == -1:
+                tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
+                eval_poblacion[i] = funcion_objetivo
+                t += 1
+                
+        if num_generacion % 10 == 0:
+            
+            mejores_individuos = np.argsort(eval_poblacion)
+            for i in range(int(0.1*tam_poblacion_memeticos)):
+                mejor_individuo = mejores_individuos[i];
+                poblacion[mejor_individuo], eval_poblacion[mejor_individuo] , eval_realizadas = BL(train_datos,train_clases,poblacion[mejor_individuo],eval_poblacion[mejor_individuo])
+                t += eval_realizadas
+            
+
+            
         
         mejor_actual = obtenerPosMejorSolucion(eval_poblacion)
         
@@ -958,7 +1005,6 @@ def memeticoBusquedaMejor(training, test):
             
         num_generacion += 1   
         
-    print("busquedas realizadas=", num_busquedas_realizadas)
     tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
     
@@ -986,6 +1032,11 @@ def main():
         """
         datos_AGGBLX = np.zeros((6,4))
         datos_AGGAritmetico = np.zeros((6,4))
+        datos_AGEBLX = np.zeros((6,4))
+        datos_AGEAritmetico = np.zeros((6,4))
+        datos_memeticoMejores = np.zeros((6,4))
+        datos_memeticoTodos = np.zeros((6,4))
+        datos_memeticoProbabilida = np.zeros((6,4))
         print("------------------------")
         
         #Cargo uno de los ficheros
@@ -1027,7 +1078,7 @@ def main():
         skf = StratifiedKFold(n_splits=num_particiones, shuffle=True, random_state=semilla)
         
         
-        for i in range(2):
+        for i in range(7):
             #indicla la posicion en la que se almacenaran los datos del algoritmo
             i_particion = 0
             for train, test in skf.split(datos, clase_test):  
@@ -1036,11 +1087,27 @@ def main():
                 test_datos = matriz_final[test,:]
                
                 if i == 0:
-                    datos_AGGBLX[i_particion] = memeticoBusquedaMejor(train_datos,test_datos)
-                    print(datos_AGGBLX[i_particion])
+                    datos_AGGBLX[i_particion] = AGG_BLX(train_datos,test_datos)
+
                 if i == 1:
                     datos_AGGAritmetico[i_particion] = AGG_Aritmetico(train_datos,test_datos)
-                    print(datos_AGGAritmetico[i_particion]);
+
+                if i == 2:
+                    datos_AGEBLX[i_particion] = AGE_BLX(train_datos,test_datos)
+
+                if i == 3:
+                    datos_AGEAritmetico[i_particion] = AGE_Aritmetico(train_datos,test_datos)
+                
+                
+
+                if i == 4:
+                    datos_memeticoTodos[i_particion] = memeticoBusquedaTotal(train_datos,test_datos)
+
+                if i == 5:
+                    datos_memeticoProbabilida[i_particion] = memeticoProbabilidad(train_datos,test_datos)
+                
+                if i == 6:
+                    datos_memeticoMejores[i_particion] = memeticoBusquedaMejores(train_datos,test_datos)
             
                 i_particion += 1
                 
@@ -1054,8 +1121,24 @@ def main():
             if i == 1:
                 print("\nDatos AGGAritmetico\n")
                 dibujarTabla(datos_AGGAritmetico)
+            if i == 2:
+                print("\nDatos AGEblx\n")
+                dibujarTabla(datos_AGEBLX)
+                
+            if i == 3:
+                print("\nDatos AGEAritmetico\n")
+                dibujarTabla(datos_AGEAritmetico)
     
-
+            if i == 4:
+                print("\nDatos AM-(10,1.0)\n")
+                dibujarTabla(datos_memeticoTodos)
+                
+            if i == 5:
+                print("\nDatos AM-(10,0.1)\n")
+                dibujarTabla(datos_memeticoProbabilida)
+            if i == 6:
+                print("\nDatos AM-(10,0.1mej)\n")
+                dibujarTabla(datos_memeticoMejores)
     
 
 
