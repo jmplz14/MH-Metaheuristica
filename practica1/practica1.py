@@ -16,7 +16,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from time import time
 from sklearn.neighbors import KDTree
-semilla = 14
+semilla = 10
 np.random.seed(semilla)
 #rutas de los ficheros
 colopscopy = "datos/colposcopy.arff"

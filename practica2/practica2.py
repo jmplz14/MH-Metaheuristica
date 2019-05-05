@@ -155,11 +155,16 @@ def k_nn(training,test):
 
 def evaluate(weights, X, y):
     X_transformed = (X * weights)[:, weights > 0.2]
-    kdtree = KDTree(X_transformed)
-    neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
-    accuracy = np.mean(y[neighbours] == y)
-    reduction = np.mean(weights < 0.2)
-    return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
+    if X_transformed.size > 0:
+        kdtree = KDTree(X_transformed)
+        
+        neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
+        accuracy = np.mean(y[neighbours] == y)
+        reduction = np.mean(weights < 0.2)
+        return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
+    else:
+        return 0,0,0
+    
 
 def uno_nn_antiguo(train_datos, train_clases, test_datos, test_clases, w):
     
@@ -394,6 +399,7 @@ def mutarGen(pesos, posicion):
         
     if pesos[posicion] < 0:
         pesos[posicion] = 0
+    
     return pesos
         
 def obtenerPosMejorSolucion(valores):
@@ -777,7 +783,7 @@ def memeticoBusquedaTotal(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
     w_mejor_valor = eval_poblacion[mejor_actual]
-    num_busquedas_realizadas = 0
+
     num_generacion = 1
     while t < num_evaluaciones :
         
@@ -803,6 +809,7 @@ def memeticoBusquedaTotal(training, test):
                 tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(poblacion[i], train_datos, train_clases)
                 eval_poblacion[i] = funcion_objetivo
                 t += 1
+                
             
         for i in range(num_cruces):
             if eval_poblacion[i] == -1:
@@ -811,10 +818,8 @@ def memeticoBusquedaTotal(training, test):
                 t += 1
         
         
-        if num_generacion % 10 == 0:
-            
+        if num_generacion % 10 == 0:  
             for i in range(tam_poblacion_memeticos):
-                num_busquedas_realizadas += 1
                 poblacion[i], eval_poblacion[i] , eval_realizadas = BL(train_datos,train_clases,poblacion[i],eval_poblacion[i])
                 t += eval_realizadas
         
@@ -862,7 +867,7 @@ def memeticoProbabilidad(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
     w_mejor_valor = eval_poblacion[mejor_actual]
-    num_busquedas_realizadas = 0
+
     num_generacion = 0
     while t < num_evaluaciones :
         
@@ -899,7 +904,7 @@ def memeticoProbabilidad(training, test):
             prob_busqueda = np.random.uniform(0,1,tam_poblacion_memeticos)
             for i in range(tam_poblacion_memeticos):
                 if prob_busqueda[i] <= 0.1:
-                    num_busquedas_realizadas += 1
+                   
 
                     poblacion[i], eval_poblacion[i] , eval_realizadas = BL(train_datos,train_clases,poblacion[i],eval_poblacion[i])
                     t += eval_realizadas
