@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.14)  6 MAY 2019 02:06
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.14)  6 MAY 2019 13:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -597,29 +597,29 @@ LaTeX Warning: Command \textordmasculine invalid in math mode on input line 155
 .
 
 [3]
-Overfull \hbox (17.78397pt too wide) in paragraph at lines 202--203
+Overfull \hbox (17.78397pt too wide) in paragraph at lines 204--205
 []\OT1/cmr/m/n/10 Num[]individuos rep-re-senta el tama~no de poblaci^^Son que t
 en-dremos y el num[]genes
  []
 
 [4] [5] [6]
-Overfull \hbox (1.77834pt too wide) in paragraph at lines 366--367
+Overfull \hbox (1.77834pt too wide) in paragraph at lines 368--369
 \OT1/cmr/m/n/10 En esta secci^^Son ex-pli-care-mos los tres al-go-rit-mos que h
 emos uti-lizado para obtener
  []
 
-[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]
-<screen3.png, id=74, 834.86906pt x 639.13782pt>
+[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18] [19]
+<screen3.png, id=80, 834.86906pt x 639.13782pt>
 File: screen3.png Graphic file (type png)
 <use screen3.png>
-Package pdftex.def Info: screen3.png  used on input line 799.
+Package pdftex.def Info: screen3.png  used on input line 886.
 (pdftex.def)             Requested size: 345.0pt x 264.11572pt.
- [18 <./screen3.png (PNG copy)>] [19] (./practica2.aux) ) 
+ [20 <./screen3.png (PNG copy)>] [21] (./practica2.aux) ) 
 Here is how much of TeX's memory you used:
- 4809 strings out of 494923
- 61511 string characters out of 6180741
+ 4823 strings out of 494923
+ 61722 string characters out of 6180741
  319139 words of memory out of 5000000
- 8077 multiletter control sequences out of 15000+600000
+ 8091 multiletter control sequences out of 15000+600000
  7160 words of font info for 27 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  41i,7n,40p,771b,1607s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -634,10 +634,10 @@ msfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><
 /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/s
 hare/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on practica2.pdf (21 pages, 336415 bytes).
+Output written on practica2.pdf (23 pages, 342565 bytes).
 PDF statistics:
- 117 PDF objects out of 1000 (max. 8388607)
- 81 compressed objects within 1 object stream
+ 123 PDF objects out of 1000 (max. 8388607)
+ 85 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 

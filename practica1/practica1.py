@@ -104,8 +104,8 @@ def RELIEF(training, test):
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
     
-    #tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
-    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
+    tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
+    #tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
     
     
     datos_medidos = np.zeros(4)
@@ -162,7 +162,7 @@ def evaluate(weights, X, y):
     reduction = np.mean(weights < 0.2)
     return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
 
-def uno_nn_antiguo(train_datos, train_clases, test_datos, test_clases, w):
+def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
     
     
     #nos quedamos con los datos que cumplen el minimo para los pesos
@@ -187,32 +187,7 @@ def uno_nn_antiguo(train_datos, train_clases, test_datos, test_clases, w):
     
     return tasa_acierto,tasa_reduccion
 
-def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
-    
-    
-    #nos quedamos con los datos que cumplen el minimo para los pesos
-    train_datos = (train_datos * w)[: , w >= min_peso]
-    test_datos = (test_datos * w)[: , w >= min_peso]   
 
-    num_aciertos = 0;
-    
-    #entrenamos con el train 
-    clasificador = KNeighborsClassifier(n_neighbors=1)
-    clasificador.fit(train_datos, train_clases)
-    num_muestras = np.size(train_datos,0)
-    
-    
-    
-    #clasificamos con el test
-    for i in range(num_muestras):
-        tipo = clasificador.predict([train_datos[i]])
-        if( tipo == train_clases[i]):
-            num_aciertos += 1
-            
-    tasa_acierto = 100 * (num_aciertos / num_muestras)
-    tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
-    
-    return tasa_acierto,tasa_reduccion
 
 
 def BL(training,test):
@@ -310,7 +285,8 @@ def BL(training,test):
     datos_algoritmo[1] = mejor_tasa_reduccion
     datos_algoritmo[2] = mejor_valor_w
     datos_algoritmo[3] = tiempo"""
-    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
+    tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
     datos_algoritmo[0] = tasa_clase
     datos_algoritmo[1] = tasa_reduccion
     datos_algoritmo[2] = funcion_mejora

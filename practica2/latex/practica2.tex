@@ -177,20 +177,22 @@
 	
 	 Esto hará que le demos la misma importancia la tasa de reducción y a la tasa de clase a la hora de ver como ajustan los datos. No voy a poner el pseudocódigo porque simplemente es implementar es función sin ninguna complicación mas.
 	
-	La implementación utilizada en es la siguiente:
+
+	\subsection{Función evaluación para la búsqueda local}
+		La implementación utilizada en es la siguiente:
 	
 	\begin{lstlisting}
-def evaluate(weights, X, y):
-	X_transformed = (X * weights)[:, weights > 0.2]
-	kdtree = KDTree(X_transformed)
-	neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
-	accuracy = np.mean(y[neighbours] == y)
-	reduction = np.mean(weights < 0.2)
-	return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
+	def evaluate(weights, X, y):
+		X_transformed = (X * weights)[:, weights > 0.2]
+		kdtree = KDTree(X_transformed)
+		neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
+		accuracy = np.mean(y[neighbours] == y)
+		reduction = np.mean(weights < 0.2)
+		return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
 	\end{lstlisting}
-	 
-	 Tengo que darle las gracias a Antonio Molner que compartió esta función para que pudiéramos utilizarla. Gracias a KDTree se puede buscar rápidamente a los vecinos más cercanos de cualquier punto.
 	
+	Tengo que darle las gracias a Antonio Molner que compartió esta función para que pudiéramos utilizarla. Gracias a KDTree se puede buscar rápidamente a los vecinos más cercanos de cualquier punto.
+	Se consigue el leave-one-out gracias a que en el kdtree utilizamos k=2 para quedarnos con los dos vecinos mas cercanos y a continuación con las funciones para array de python nos quedamos con la ultima columna que sera la que no contenga a si mismo.
 	\subsection{Generación de la población inicial}
 	
 	Para esto se ha usado una distribución aleatoria uniforme con la que  inicializaremos los pesos de cada individuo de la población. 
@@ -521,7 +523,7 @@ end
 		sin_mejora = 0
 		
 		#Se comprueba el valor de la solucion
-		tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)
+		tasa_clase, tasa_reduccion = evaluate(train_datos, train_clases, w)
 		
 		funcion_mejora = funcionObjetivo(tasa_clase,tasa_reducion)
 		
@@ -530,7 +532,7 @@ end
 		mejor_tasa_clase = tasa_clase
 		mejor_tasa_reduccion = tasa_reduccion
 		
-		while continua_ejecutando(num_vecions,sin_mejora)
+		while num_vecions < 15000 y sin_mejora < 20 * num_pesos
 			num_veciones += 1
 			anterior_peso = w[pos_w]
 			pesos = mutacion(pos_w,pesos)
@@ -541,7 +543,7 @@ end
 				sin_mejora += 1	
 				
 			else
-				tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)            
+				tasa_clase, tasa_reduccion = evaluate(train_datos, train_clases, w)            
 				funcion_mejora = funcionObjetivo(tasa_clase,tasa_reducion)
 				
 				
@@ -660,7 +662,7 @@ end
 	\begin{enumerate}
 		\item Tamaño de la poblacion(tam\_poblacion): 30 individuos
 		\item Numero de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
-		\item Probabilidad de cruce(prob\_cruce): 1
+		\item Probabilidad de cruce(prob\_cruce): 1. Siempre cruzan los padres seleccionados.
 		\item Probabilidad de mutación(prob\_mutacion): 0.001
 		\item Numero de evaluaciones(max\_evaluaciones): 15000
 	\end{enumerate}
@@ -725,6 +727,88 @@ function AGE(X,y)
 	
 end
 	\end{lstlisting}
+	
+	\subsection{Algoritmos meméticos}
+	Sigue la estructura de los AGG añadiendo búsqueda local a determinados individuos de la poblacion, cada ciertas épocas. En este caso se ha usado el cruce BLX que fue el que mejores resultados nos dio para el AGG. El pseudocódigo es el mismo que para AGG solamente que incluimos una nueva comprobación justo debajo de la mutación que sera la que si se cumple nos realice la búsqueda local. Esta comprobación sera que la generaciones sea un múltiplo de 10, puesto que la búsqueda local se hará cada 10 generaciones. Tendremos 3 formas distintas de realizar la búsqueda local.
+	
+	\begin{enumerate}
+		\item AM-(10,1.0): Se aplica la búsqueda local a todos los elementos de la poblacion.
+		\item AM-(10,0.1): Se tiene una probabilidad de 0.1 para ver si un individuo de la población recibe búsqueda local o no.
+		\item AM-(10,0.1mej): Se aplica la búsqueda local a los 0.1*N mejores individuos de la población. N es el numero total de individuos.
+	\end{enumerate}
+
+	A la hora de calcular el numero de evaluaciones que realizamos tendremos que tener en cuenta también las usadas por el algoritmos de búsqueda.
+
+	\subsubsection{Parámetros}
+	Los parámetros son muy parecidos al AGG con los cambios en el Tamaño de la población y 
+	\begin{enumerate}
+		\item Tamaño de la poblacion(tam\_poblacion): 10 individuos
+		\item Número de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
+		\item Probabilidad de cruce(prob\_cruce): 1. Siempre cruzan los padres seleccionados.
+		\item Probabilidad de mutación(prob\_mutacion): 0.001
+		\item Número de evaluaciones(max\_evaluaciones): 15000
+		\item Número de vecinos BL: 2*N siendo N el numero de genes de un individuo de la poblacion.
+	\end{enumerate}
+
+	\subsubsection{Pseudocódigo}
+	Como he mencionado anteriormente el pseudocódigo es exactamente el mismo que el AGG con el cambio de que añadimos las búsquedas después de las mutaciones. Voy a realizar solo el pseudocódigo de cada tipo de memético y no incluiré todo el código, puesto que ya esta bien explicado en el apartado de AGG. Para utilizar la búsqueda local en los meméticos he realizado unas modificaciones que nos devuelve el numero de evaluaciones que ha realizado, puesto que en algunas pasadas no necesita realizar la evaluación. La bl devuelve el vector de pesos, la funcion objetivos y el numero de evaluaciones realizadas.
+	
+
+	
+	\begin{enumerate}
+		\item AM-(10,1.0)
+		\begin{lstlisting}
+n_generacion = num_generacion + 1
+if num_generacion % 10 == 0
+	for i in [0,tamano_poblacion]
+		poblacion[i], eval_poblacion[], eval_realizadas = BL(X,y,poblacion[i])
+		evaluacioens += eval_realizadas 
+	end
+end
+		\end{lstlisting}
+		\item AM-(10,0.1)
+		\begin{lstlisting}
+n_generacion = num_generacion + 1
+if num_generacion % 10 == 0
+	for i in [0,tamano_poblacion]
+		prob_busqueda = random entre [0,1]
+		if pro_busqueda <= 0.1
+			poblacion[i], eval_poblacion[], eval_realizadas = BL(X,y,poblacion[i])
+			evaluacioens += eval_realizadas 
+		end
+	end
+end
+		\end{lstlisting}
+		\item AM-(10,0.1mej)
+		\begin{lstlisting}
+n_generacion = num_generacion + 1
+	if num_generacion % 10 == 0
+		ordenados[] = indices ordenados de la poblacion. Primero los que mejor funcion objetivo tienen. 
+		for i in [0,truncar(0.1*tamano_poblacion)]
+			poblacion[ordenados[i]], eval_poblacion[ordenados[i]], eval_realizadas = BL(X,y,poblacion[i])
+			evaluacioens += eval_realizadas 
+	end
+end
+		\end{lstlisting}
+	
+	\end{enumerate}
+	
+	Después he realizado también un pequeño cambio en la forma de seleccionar las mutaciones puesto que la poblacion es mas pequeña en los memémticos. He realizado la probabilidad de mutación como en los AGE utilizando la probabilidad de mutación por cromosoma. El pseudocódigo es el siguiente.
+	
+	\begin{lstlisting}
+
+prob_mutacion_cromosoma = num_genes * pro_mutacion	
+for i in [0,tam_poblacion]
+mutacion = randon en rango [0,1]
+	if mutacion <= prob_mutacion_cromosoma	
+		pos_gen = random entre [0, num_genes)
+		nueva_poblacion[0] = mutarGen(nueva_poblacion,pos_gen)
+	end	
+end
+	\end{lstlisting}
+	
+	
+	
 	\section{Algoritmo de comparación}
 
 	
@@ -782,7 +866,7 @@ end
 	
 	\section{Explicación de desarrollo de la práctica}
 	La he realizado en python por la gran cantidad de librerías y código ya aportado por estas para el tratamiento y clasificación de este.
-	Aparte de ser un leguaje que te permite implementar mas rápido los proyectos.
+	Aparte de ser un lenguaje que te permite implementar mas rápido los proyectos.
 	Al ser python no hace falta hacer make ni ningún tipo de constructor para ejecutarla simplemente se ejecuta el fichero en el interprete de comandos.
 	
 	En el main he puesto un for que cicla tres veces para calcular los datos de cada uno de los algoritmos con cada uno de los ficheros de datos dado. Los datos se muestran cuando se han ejecutado las 5 particiones distintas que podremos tener con todos los tres algoritmos de esta practica. Puede tardar en mostrar los datos debido a que los tiempos para la ejecución para la búsqueda local tardan mas que los demás. Esto retrasa la muestra de datos.
