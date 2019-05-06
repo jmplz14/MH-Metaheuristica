@@ -166,7 +166,7 @@ def evaluate(weights, X, y):
         return 0,0,0
     
 
-def uno_nn_antiguo(train_datos, train_clases, test_datos, test_clases, w):
+def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
     
     
     #nos quedamos con los datos que cumplen el minimo para los pesos
@@ -188,35 +188,10 @@ def uno_nn_antiguo(train_datos, train_clases, test_datos, test_clases, w):
             
     tasa_acierto = 100 * (num_aciertos / num_muestras)
     tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
+    funcion_objetivo= (tasa_acierto + tasa_reduccion) / 2
     
-    return tasa_acierto,tasa_reduccion
+    return tasa_acierto,tasa_reduccion,funcion_objetivo
 
-def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
-    
-    
-    #nos quedamos con los datos que cumplen el minimo para los pesos
-    train_datos = (train_datos * w)[: , w >= min_peso]
-    test_datos = (test_datos * w)[: , w >= min_peso]   
-
-    num_aciertos = 0;
-    
-    #entrenamos con el train 
-    clasificador = KNeighborsClassifier(n_neighbors=1)
-    clasificador.fit(train_datos, train_clases)
-    num_muestras = np.size(train_datos,0)
-    
-    
-    
-    #clasificamos con el test
-    for i in range(num_muestras):
-        tipo = clasificador.predict([train_datos[i]])
-        if( tipo == train_clases[i]):
-            num_aciertos += 1
-            
-    tasa_acierto = 100 * (num_aciertos / num_muestras)
-    tasa_reduccion = 100 * (w[w < min_peso].size / w.size)
-    
-    return tasa_acierto,tasa_reduccion
 
 
 def BL(train_datos, train_clases, w, valor):
@@ -489,9 +464,9 @@ def AGG_BLX(training, test):
             
         
     
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
-    
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     datos_algoritmo = np.zeros(4)
     datos_algoritmo[0] = tasa_clase
@@ -566,9 +541,9 @@ def AGG_Aritmetico(training, test):
             
         
     
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
-    
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     datos_algoritmo = np.zeros(4)
     datos_algoritmo[0] = tasa_clase
@@ -670,9 +645,9 @@ def AGE_BLX(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
     
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
-    
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     datos_algoritmo = np.zeros(4)
     datos_algoritmo[0] = tasa_clase
@@ -750,8 +725,9 @@ def AGE_Aritmetico(training, test):
     mejor_actual = obtenerPosMejorSolucion(eval_poblacion);
     w_mejor = poblacion[mejor_actual]
 
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     
     datos_algoritmo = np.zeros(4)
@@ -837,8 +813,9 @@ def memeticoBusquedaTotal(training, test):
             
         num_generacion += 1   
         
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     
     datos_algoritmo = np.zeros(4)
@@ -923,8 +900,9 @@ def memeticoProbabilidad(training, test):
             
         num_generacion += 1   
         
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
     tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     
     datos_algoritmo = np.zeros(4)
@@ -1010,8 +988,10 @@ def memeticoBusquedaMejores(training, test):
             
         num_generacion += 1   
         
-    tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    #tasa_clase, tasa_reduccion, funcion_objetivo = evaluate(w_mejor, test_datos, test_clases)
+    
     tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,w_mejor)
     
     
     datos_algoritmo = np.zeros(4)

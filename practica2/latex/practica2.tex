@@ -571,7 +571,7 @@ end
 		return uno-nn(X_train,Y_train,X_test,Y_test,pesos)
 	end
 	\end{lstlisting}
-	\subsection{Algoritmo AGG}
+	\subsection{Algoritmo genético generacional}
 	El AGG (algoritmo genético generacional) parte de una poblacion inicial y en cada época cambia completamente la población actual por una población nueva. Esto se realiza mediante el proceso de selección en el que compiten los padres por continuar en la poblacion. En este caso usamos el torneo binario para realizar esta selección. Los individuos con mejor función objetivo tendrán mas opciones de ganar un combate y quedar en la nueva poblacion. Los individuos que competirán se eligen aleatoriamente. Si se tienen N individuos en la poblacion se realizaran N*2 torneos. 
 	
 	Después realizamos los cruces entre padres para generar nuevos hijos. Estos hijos sustituirán a los padres en la nueva poblacion. Se tiene una probabilidad de que dos padres crucen. Parar ahorrar generaciones de números aleatorios y como el proceso de torneo binario es aleatorio, calcularemos el numero de cruces que se podrían dar en una época y se realizara este numero de cruces empezando por los primeros individuos de la poblacion. 
@@ -579,7 +579,7 @@ end
 	El siguiente paso seria realizar las mutaciones en los genes apartir de una probabilidad de mutación que se tendrán por gen. En este caso como se tiene un numero muy elevado de genes en toda la poblacion, se calculara el numero de mutaciones que se darían con la probabilidad especificada y se genera por cada mutación dos números aleatorios. Uno para el individuo a mutar y otro para el gen que mutara. 
 	
 	Para no perder la mejor solución de una época a otra, si el mejor individuo de la nueva época es peor que el mejor individuo de la época anterior, se cambiara el peor individuo de la poblacion actual por el mejor de la anterior. Esto nos asegura que como mínimo tendremos el mejor individuo conocido o alguno mejor en la nueva poblacion.
-	\subsection{Parámetros}
+	\subsubsection{Parámetros}
 	Los parámetros para nuestro AGG son lo siguiente:
 	\begin{enumerate}
 		\item Tamaño de la poblacion(tam\_poblacion): 30 individuos
@@ -588,30 +588,26 @@ end
 		\item Probabilidad de mutación(prob\_mutacion): 0.001
 		\item Numero de evaluaciones(max\_evaluaciones): 15000
 	\end{enumerate}
-
-	\subsection{Pseudocódigo}
+	\newpage
+	\subsubsection{Pseudocódigo}
 	\begin{lstlisting}
 function AGG(X,y)
 	num_genes = numero de genes por inidividuo
 	num_cruces = int(prob_cruce * tam_poblacion)
-	num_mutacions = int(prob_mutacion * (tam_poblacion * num_genes))
-	
+	num_mutacions = int(prob_mutacion * (tam_poblacion * num_genes))	
 	//Se inicia la poblacion y calculamos su funcion objetivo
 	poblacion[][] = inicializarPobalcion(tam_poblacion,num_genes)
 	eval_poblacion[] = evaluarPoblacion(X,y,poblacion)
 	
 	evaluaciones = tam_poblacion
-	
 	//Nos quedamos el mejor actual por si hay que volver a meterlo en la poblacion
 	mejor_acutal = ObtenerPosicionMejorIndividuo(eval_poblacion);
 	mejor_individuo[] = poblacion[mejor_actual]
 	mejor_valor = eval_poblacion[mejor actual]
 	
-	while evaluaciones es menor que max_evaluaciones
-		
+	while evaluaciones es menor que max_evaluaciones		
 		//obtenomos la nueva poblacion mediante torneo
-		poblacion, eval_poblacion = torneoBinario(poblacion,eval_poblacion)
-		
+		poblacion, eval_poblacion = torneoBinario(poblacion,eval_poblacion,tam_poblacion)
 		for i in [0,num_cruces]
 			Sustituimos los padres i*2 y i*2+1 por los nuevos hijos dados poru no de los dos cruces(aritmetico o blx)
 			
@@ -627,65 +623,132 @@ function AGG(X,y)
 			
 			poblacion[i] = mutarGen(poblacion[pos_individuo], pos_gen)
 			eval_poblacion[pos_individuo] = evaluate(poblacion[pos_individuo],X,y)
-			evaluaciones = evaluaciones + 1
-			
-		end
-		
+			evaluaciones = evaluaciones + 1			
+		end		
 		//Calculamos la funcion objetivo de los cruzados anteriormente
 		for i in [0,num_cruces]
 			if eval_poblacion[i] == -1
 			eval_poblacion[i] = evaluate(poblacion[i],X,y)
-			evaluaciones = evaluaciones + 1
-		
+			evaluaciones = evaluaciones + 1		
 		end
 		
 		mejor_actual = ObtenerPosicionMejorIndividuo(eval_poblacion)
 		
 		if mejor_valor > eval_poblacion[mejor_actual]
-			//Sustituimos el peor de la poblacion por el mejor_individuo
-			poer_individuo = obtenerPosicionPeorSolucion(poblacion)
-			poblacion[peor_individuo] = mejor_individuo
-			eval_poblacion[peor_individuo] = mejor_valor
+			Sustituimos el peor de la poblacion por el mejor_individuo
 		else
 			mejor_individuo = poblacion[mejor_actual]
 			mejor_valor = eval_poblacion[mejor_actual]
 		end
 		
 	end
-	
 	return poblacion, eval_poblacion
-	
-	
-	
-	
+
 end
 	\end{lstlisting}
 	
+	\subsection{Algoritmo genético estacionario}
+	El AGE tiene un funcionamiento muy parecido al AGG. El cambio principal es que en vez de cambiar toda la poblacion en cada época, añade dos nuevos hijos si son mejores que los dos peores de la poblacion actual.
 	
+	Esto se consigue realizando dos torneos binarios para obtener los dos padres que cruzaremos. A continuación cruzamos los padres y nos quedamos con los dos hijos que obtenemos. Se realizan las mutaciones en la poblacion actual y obtenemos los dos peores individuos de la población. En este caso la probabilidad de mutación no merece la pena hacerla como en el caso del agg. Lo que haremos es obtener la probabilidad que tiene un individuo de la poblacion de mutar. Para esto multiplicamos el numero de genes de un individuo por la probabilidad de mutación. Con un aleatorio se vera si muta o no y si es menor a la probabilidad que tiene de mutar se obtendrá otro aleatorio para la posición de gen a mutar. Esto se repite para los dos hijos.
+	$$
+	prob_mutacion_cromosoma = prob_mutacion * n_genes_cromosoma
+	$$
+	Des entre los hijos y los peores individuos de la poblacion nos quedamos los 2 mejores y serán lo que formen parte de la poblacion.
+	\subsubsection{Parámetros}
+	Los parámetros para nuestro AGE son prácticamente iguales que los del AGG cambiando la probabilidad de cruce unicamente:
+	\begin{enumerate}
+		\item Tamaño de la poblacion(tam\_poblacion): 30 individuos
+		\item Numero de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
+		\item Probabilidad de cruce(prob\_cruce): 1
+		\item Probabilidad de mutación(prob\_mutacion): 0.001
+		\item Numero de evaluaciones(max\_evaluaciones): 15000
+	\end{enumerate}
+	\newpage
+	\subsubsection{Pseudocódigo}
+		\begin{lstlisting}
+function AGE(X,y)
+	num_genes = numero de genes por inidividuo
+	prob_mutacion_cromosoma = prob_mutacion * n_genes
+	//Se inicia la poblacion y calculamos su funcion objetivo
+	poblacion[][] = inicializarPobalcion(tam_poblacion,num_genes)
+	eval_poblacion[] = evaluarPoblacion(X,y,poblacion)	
+	evaluaciones = tam_poblacion
+	//Nos quedamos el mejor actual por si hay que volver a meterlo en la poblacion
+	mejor_acutal = ObtenerPosicionMejorIndividuo(eval_poblacion);
+	mejor_individuo[] = poblacion[mejor_actual]
+	mejor_valor = eval_poblacion[mejor actual]
+	
+	while evaluaciones es menor que max_evaluaciones		
+		//obtenomos la nueva poblacion mediante torneo
+		nueva_poblacion[][], valor_poblacion = torneoBinario(poblacion,eval_poblacion,2)
+		
+		//Se realiza el cruce aritmetico o blx y se guardan los hijos
+		nueva_poblacion[0],nueva_poblacion[1] = cruce aritmetico o blx
+			
+		mutacion1 = randon en rango [0,1]
+		mutacion2 = randon en rango [0,1]	
+		if mutacion1 <= prob_mutacion_cromosoma
+			pos_gen = random entre [0, num_genes)
+			nueva_poblacion[0] = mutarGen(nueva_poblacion,pos_gen)
+		end	
+		if mutacion1 <= prob_mutacion_cromosoma
+			pos_gen = random entre [0, num_genes)
+			nueva_poblacion[0] = mutarGen(nueva_poblacion,pos_gen)
+		end
+		
+		valor_poblacion[0] = evaluate(nueva_poblacion[0],X,y)
+		valor_poblacion[1] = evaluate(nueva_poblacion[1],X,y)
+		evaluacions = evaluaciones + 2
+		
+		//En el 0 tendremos el indice del peor y en el 1 el indice del segundo peor		
+		pos_peores[] = obtenemos los indices de los dos peores de la poblacion
+		//tendremos los cromosomas de los dos mejores y los valores de estos
+		
+		if valores[0] > eval_poblacion[pos_menores[0]]
+			poblacion[pos_menores[0]] = nueva_poblacion[0]
+			eval_poblacion[pos_menores[0]] = valores[0]
+			if valores[0] > eval_poblacion[pos_menores[1]] :
+				auxiliar = pos_menores[0];
+				pos_menores[0] = pos_menores[1]
+				pos_menores[1] = auxiliar
+			end
+		end
+		
+		if valores[1] > eval_poblacion[pos_menores[0]]
+			poblacion[pos_menores[0]] = nueva_poblacion[1]
+			eval_poblacion[pos_menores[0]] = valores[1]
+		end
+	
+	end
+	return poblacion, eval_poblacion
+	
+end
+	\end{lstlisting}
 	\section{Algoritmo de comparación}
-	Para La comparación he usado el algoritmo uno-nn que nos compara las clases con el elemento de entrenamiento mas cercano a nuestro elemento de test. Nos clasificara la clase con la clase del elemento mas cercano que no sea el mismo.Tiene en cuenta que el mas cercano no puede ser el mismo.
+
+	
+	Para la comparación he utilizado el algoritmo uno-nn. Se le pasara tanto los datos de train como los de test. El algoritmo se entrena con los datos de train. Una vez entrenado recorremos los datos de la partición de test y nos clasificar el elemento de forma que pertenecerá a la clase del elemento de train mas cercano.
 	
 	
-	La diferencia con el k-nn que use para el apartado anterior es que a este si le paso los datos y etiquetas de train y test ya separados para ahorrarle ese computo y un vector de pesos que utilizare para ponderar los datos. Esta función es la que utilizo en la búsqueda local para obtener si una solución es mejor que la anterior. También ahorro cálculos al quitar de los datos las columnas que tienen valores para los pesos menores que 0.2. Esto la hace un poco mas rápida que la anterior. También la uso en el algoritmos de RELIEF al trabajar con un vector de pesos. 
-	
-	Las tengo por separado simplemente porque una trabaja con vector de pesos y otra no, usando así la que mas me conviene en cada momento.
+	También ahorro cálculos al quitar de los datos las columnas que tienen valores para los pesos menores que 0.2. 
 	
 	El pseudocódigo es el siguiente:
 
 	
 	\begin{lstlisting}
-	def uno-NN(X_train, Y_train, X_test, Y_test, pesos){
+function uno-NN(X_train, Y_train, X_test, Y_test, pesos){
 	
-	#Elimino las columnas estan en la mima posicion que un peso 
+	#Elimino las columnas que estan en la misma posicion que un peso 
 	#menor a 0.2
 	X_train = eliminarColumnas(Xtrain,pesos)
-	Y_train = eliminarColumnas(Xtrain,pesos)
+	X_text = eliminarColumnas(Xtrain,pesos)
 	
 	#Elimino los pesos que tienen valor menor que 0.2
 	pesos_sin_minimos = eliminarInferiores(pesos)
 	
 	X_train = X_train * pesos_sin_minimos
-	Y_test = Y_test * pesos_sin_minimos
+	X_text = X_test * pesos_sin_minimos
 	
 	
 	
@@ -695,20 +758,25 @@ end
 	clasificador = crearClasificador(n=1)
 	clasificador = clasificador.entreno(X_train,Y_train)
 	
-	num_elementos = getNumeroElementos(X_test)
+	num_elementos = getNumeroElementos(Y_test)
 	
 	for i in [0,num_elementos]
-	clase = clasificador.predice_clase(Y_test[i])
-	if clase == Y_test[i]
-	num_aciertos += 1
+		clase = clasificador.predice_clase(X_test[i])
+		if clase == Y_test[i]
+			num_aciertos += 1
+		end
 	end
-	end
+	
 	tasa_acierto = 100 * (num_aciertos / Y_test.size)
 	tasa_reduccion = tasaReduccion(pesos)
+	funcion_objetivo= (tasa_acierto + tasa_reduccion) / 2
 	
-	return tasa_acierto,tasa_reducion
+	return tasa_acierto,tasa_reducion,funcion_objetivo
+end
 	}
 	\end{lstlisting}
+	
+	
 	
 	
 	
