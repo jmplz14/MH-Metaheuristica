@@ -1218,7 +1218,12 @@ def EDRand(training, test):
     print(eval_mejor)
     while num_evaluaciones < 5000:
         for i in range(0,50):
-            indices = np.random.permutation(50)[0:3]
+            indices = np.random.permutation(50)[0:4]
+            pos_i = np.where(indices == i)
+
+            if np.size(pos_i) == 1:
+                indices = np.delete(indices, pos_i)
+
             p1 = poblacion[indices[0]]
             p2 = poblacion[indices[1]]
             p3 = poblacion[indices[2]]
