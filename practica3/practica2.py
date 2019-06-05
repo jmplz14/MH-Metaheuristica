@@ -1215,8 +1215,8 @@ def EDRand(training, test):
     eval_mejor = eval_poblacion[pos_mejor]
     
     num_evaluaciones = 0
-    print(eval_mejor)
-    while num_evaluaciones < 5000:
+
+    while num_evaluaciones < 15000:
         for i in range(0,50):
             indices = np.random.permutation(50)[0:4]
             pos_i = np.where(indices == i)
@@ -1232,6 +1232,56 @@ def EDRand(training, test):
             for j in range(0,num_genes):
                 if np.random.rand() < 0.5:
                    mutado[j] = p1[j] + 0.5 * (p2[j] - p3[j])
+                   mutado[j] = np.clip(mutado[j], 0, 1)
+                else:
+                   mutado[j] = poblacion[i][j]
+                    
+                    
+            eval_mutado = 100 * obtenerFitness(mutado,train_datos,train_clases);
+            num_evaluaciones += 1
+            if eval_mutado > eval_poblacion[i]:
+                poblacion[i] = mutado
+                eval_poblacion[i] = eval_mutado
+                
+                if eval_mutado > eval_mejor:
+                    mejor = mutado
+                    eval_mejor = eval_mutado
+            #print(eval_mutado)
+            
+    print(eval_mejor)
+    
+def EDCurrentToBest(training, test):
+    train_datos = training[:, 0:-1]
+    train_clases = np.array(training[:, -1], int)
+    test_datos = test[:, 0:-1]
+    test_clases = np.array(test[:, -1], int)
+    
+    num_genes = np.size(train_datos,1)
+    poblacion = inicializarPoblacion(50,num_genes)
+    eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion)
+    
+    pos_mejor = np.argmax(eval_poblacion)
+    mejor = poblacion[pos_mejor]
+    eval_mejor = eval_poblacion[pos_mejor]
+    
+    num_evaluaciones = 0
+    print(eval_mejor)
+    while num_evaluaciones < 15000:
+        for i in range(0,50):
+            indices = np.random.permutation(50)[0:3]
+            pos_i = np.where(indices == i)
+
+            if np.size(pos_i) == 1:
+                indices = np.delete(indices, pos_i)
+
+            p1 = poblacion[indices[0]]
+            p2 = poblacion[indices[1]]
+            
+            mutado = np.zeros(num_genes)
+            #print(mutado)
+            for j in range(0,num_genes):
+                if np.random.rand() < 0.5:
+                   mutado[j] = poblacion[i][j] + 0.5 * (mejor[j] - poblacion[i][j]) + 0.5 * (p1[j] - p2[j])
                    mutado[j] = np.clip(mutado[j], 0, 1)
                 else:
                    mutado[j] = poblacion[i][j]
@@ -1319,7 +1369,7 @@ def main():
                 #nos quedamos con los datos de l aparticion de train y de test
                 train_datos = matriz_final[train,:]
                 test_datos = matriz_final[test,:]
-                EDRand(train_datos, test_datos)
+                EDCurrentToBest(train_datos, test_datos)
                
                 """if i == 0:
                     datos_AGGBLX[i_particion] = AGG_BLX(train_datos,test_datos)
