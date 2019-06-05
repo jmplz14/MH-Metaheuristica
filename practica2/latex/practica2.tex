@@ -3,6 +3,7 @@
  \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{verbatim}
+\usepackage{float}
 \usepackage{graphicx}
 \graphicspath{ {imagenes/} }
  \usepackage{xcolor}
@@ -201,7 +202,7 @@
 		Poblacion = np.random.uniform(0,1,(num\_individuos, num\_genes))
 	$$ 
 	
-	Num\_individuos representa el tamaño de población que tendremos y el num\_genes el numero de características que tienen nuestros datos.
+	Num\_individuos representa el tamaño de población que tendremos y el num\_genes el número de características que tienen nuestros datos.
 	
 	Cuando se tiene generada los cromosomas de una poblacion necesitamos evaluarlos para saber su función objetivo. Esto lo hacemos mediante la siguiente función.
 	
@@ -219,13 +220,14 @@ function evaluarPobalcion(X, y, poblacion[][])
 			
 end
 	\end{lstlisting}
+	\newpage
 	
 	\subsection{Torneo binario}
 	
 	El torneo binario sera el método mediante el que elegiremos dentro de una poblacion los padres que pasaran a la siguiente generación.
 	Se basa en enfrentar los individuos de la poblacion actual por parejas y quedarnos con el que mayor función objetivo tenga. 
 	
-	En nuestro caso pasaremos a la función de torneo binario la poblacion actual, sus valores de función objetivo y el numero de enfrentamientos que tendremos. Por cada enfrentamiento que se de saldrá un vencedor que permanecerá en la poblacion durante la siguiente generación y el perdedor sera eliminado. 
+	En nuestro caso pasaremos a la función de torneo binario la poblacion actual, sus valores de función objetivo y el número de enfrentamientos que tendremos. Por cada enfrentamiento que se de saldrá un vencedor que permanecerá en la poblacion durante la siguiente generación y el perdedor sera eliminado. 
 	
 	La selección de los padres a enfrentar se hará con dos enteros aleatorios que representaran los padres de la poblacion a enfrentar.
 	\begin{lstlisting}
@@ -328,7 +330,7 @@ end
 		
 	\end{enumerate} 
 	Esto se realiza tantas veces como genes tienen los cromosomas.
-	
+	\newpage
 	
 	
 	\begin{lstlisting}
@@ -348,7 +350,7 @@ function cruceAritmetico(cromosoma1,cromosoma2)
 end
 	\end{lstlisting}
 	
-	\subsection{Mutar ge}
+	\subsection{Mutar gen}
 	La mutación se realiza en una posición del cromosoma. Ha esta posición se le suma un aleatorio generado con una distribución normal con $\sigma = 0.3$. Se tiene que controlar que la mutación no queda por encima de 1 o por debajo de 0
 	
 	\begin{lstlisting}
@@ -362,7 +364,8 @@ fucntion mutarGen(cromosoma, posicion)
 	return cromosoma
 
 end
-	\end{lstlisting}
+	\end{lstlisting}	
+	\newpage
 	
 	\section{Explicación de los algoritmos}
 	En esta sección explicaremos los tres algoritmos que hemos utilizado para obtener los datos de clasificación.
@@ -400,7 +403,7 @@ end
 		return tasa_acierto,funcionObjetivo(tasa_acierto,0)
 	}
 	\end{lstlisting}
-	
+	\newpage
 	
 	\subsection{Algoritmo RELIEF}
 	El algoritmo RELIEF es una solución greedy que se basa en buscar el enemigo y vecino mas cercano para para mejorar el vector de pesos. El vector de pesos se inicia a 0.
@@ -503,7 +506,7 @@ end
 	end
 	\end{lstlisting}
 	
-	La búsqueda local ira mutando un componente del vector y quedara este si mejora los valores que el anterior. Si no se da la mejora volverá al anterior y mutara el siguiente valor. Por cada fallo en la mutación se contara un erro de mejora. Si se obtiene 20*n errores en la mejora de forma consecutiva se para la búsqueda. El valor n corresponde al numero de características que tienen un elemento de nuestro dataset.
+	La búsqueda local ira mutando un componente del vector y quedara este si mejora los valores que el anterior. Si no se da la mejora volverá al anterior y mutara el siguiente valor. Por cada fallo en la mutación se contara un erro de mejora. Si se obtiene 20*n errores en la mejora de forma consecutiva se para la búsqueda. El valor n corresponde al número de características que tienen un elemento de nuestro dataset.
 	
 	De esta forma ya tenemos dos criterios de parada, el generar 15000 vecionos o no mejorar en 20*n mutaciones de forma consecutiva.
 	
@@ -566,7 +569,7 @@ end
 			end
 			
 			
-			pos_w = obtenemosSigientePosicion(pos_w)
+			pos_w = (pos_w+1) % size(w)
 		
 		end
 		
@@ -576,19 +579,19 @@ end
 	\subsection{Algoritmo genético generacional}
 	El AGG (algoritmo genético generacional) parte de una poblacion inicial y en cada época cambia completamente la población actual por una población nueva. Esto se realiza mediante el proceso de selección en el que compiten los padres por continuar en la poblacion. En este caso usamos el torneo binario para realizar esta selección. Los individuos con mejor función objetivo tendrán mas opciones de ganar un combate y quedar en la nueva poblacion. Los individuos que competirán se eligen aleatoriamente. Si se tienen N individuos en la poblacion se realizaran N*2 torneos. 
 	
-	Después realizamos los cruces entre padres para generar nuevos hijos. Estos hijos sustituirán a los padres en la nueva poblacion. Se tiene una probabilidad de que dos padres crucen. Parar ahorrar generaciones de números aleatorios y como el proceso de torneo binario es aleatorio, calcularemos el numero de cruces que se podrían dar en una época y se realizara este numero de cruces empezando por los primeros individuos de la poblacion. 
+	Después realizamos los cruces entre padres para generar nuevos hijos. Estos hijos sustituirán a los padres en la nueva poblacion. Se tiene una probabilidad de que dos padres crucen. Parar ahorrar generaciones de números aleatorios y como el proceso de torneo binario es aleatorio, calcularemos el número de cruces que se podrían dar en una época y se realizara este número de cruces empezando por los primeros individuos de la poblacion. 
 	
-	El siguiente paso seria realizar las mutaciones en los genes apartir de una probabilidad de mutación que se tendrán por gen. En este caso como se tiene un numero muy elevado de genes en toda la poblacion, se calculara el numero de mutaciones que se darían con la probabilidad especificada y se genera por cada mutación dos números aleatorios. Uno para el individuo a mutar y otro para el gen que mutara. 
+	El siguiente paso seria realizar las mutaciones en los genes apartir de una probabilidad de mutación que se tendrán por gen. En este caso como se tiene un número muy elevado de genes en toda la poblacion, se calculara el número de mutaciones que se darían con la probabilidad especificada y se genera por cada mutación dos números aleatorios. Uno para el individuo a mutar y otro para el gen que mutara. 
 	
 	Para no perder la mejor solución de una época a otra, si el mejor individuo de la nueva época es peor que el mejor individuo de la época anterior, se cambiara el peor individuo de la poblacion actual por el mejor de la anterior. Esto nos asegura que como mínimo tendremos el mejor individuo conocido o alguno mejor en la nueva poblacion.
 	\subsubsection{Parámetros}
 	Los parámetros para nuestro AGG son lo siguiente:
 	\begin{enumerate}
 		\item Tamaño de la poblacion(tam\_poblacion): 30 individuos
-		\item Numero de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
+		\item Número de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
 		\item Probabilidad de cruce(prob\_cruce): 0.7
 		\item Probabilidad de mutación(prob\_mutacion): 0.001
-		\item Numero de evaluaciones(max\_evaluaciones): 15000
+		\item Número de evaluaciones(max\_evaluaciones): 15000
 	\end{enumerate}
 	\newpage
 	\subsubsection{Pseudocódigo}
@@ -652,7 +655,7 @@ end
 	\subsection{Algoritmo genético estacionario}
 	El AGE tiene un funcionamiento muy parecido al AGG. El cambio principal es que en vez de cambiar toda la poblacion en cada época, añade dos nuevos hijos si son mejores que los dos peores de la poblacion actual.
 	
-	Esto se consigue realizando dos torneos binarios para obtener los dos padres que cruzaremos. A continuación cruzamos los padres y nos quedamos con los dos hijos que obtenemos. Se realizan las mutaciones en la poblacion actual y obtenemos los dos peores individuos de la población. En este caso la probabilidad de mutación no merece la pena hacerla como en el caso del agg. Lo que haremos es obtener la probabilidad que tiene un individuo de la poblacion de mutar. Para esto multiplicamos el numero de genes de un individuo por la probabilidad de mutación. Con un aleatorio se vera si muta o no y si es menor a la probabilidad que tiene de mutar se obtendrá otro aleatorio para la posición de gen a mutar. Esto se repite para los dos hijos.
+	Esto se consigue realizando dos torneos binarios para obtener los dos padres que cruzaremos. A continuación cruzamos los padres y nos quedamos con los dos hijos que obtenemos. Se realizan las mutaciones en la poblacion actual y obtenemos los dos peores individuos de la población. En este caso la probabilidad de mutación no merece la pena hacerla como en el caso del agg. Lo que haremos es obtener la probabilidad que tiene un individuo de la poblacion de mutar. Para esto multiplicamos el número de genes de un individuo por la probabilidad de mutación. Con un aleatorio se vera si muta o no y si es menor a la probabilidad que tiene de mutar se obtendrá otro aleatorio para la posición de gen a mutar. Esto se repite para los dos hijos.
 	$$
 	prob_mutacion_cromosoma = prob_mutacion * n_genes_cromosoma
 	$$
@@ -661,10 +664,10 @@ end
 	Los parámetros para nuestro AGE son prácticamente iguales que los del AGG cambiando la probabilidad de cruce unicamente:
 	\begin{enumerate}
 		\item Tamaño de la poblacion(tam\_poblacion): 30 individuos
-		\item Numero de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
+		\item Número de torneos(num\_torneo): 2*M siendo m el tamaño de la poblacion
 		\item Probabilidad de cruce(prob\_cruce): 1. Siempre cruzan los padres seleccionados.
 		\item Probabilidad de mutación(prob\_mutacion): 0.001
-		\item Numero de evaluaciones(max\_evaluaciones): 15000
+		\item Número de evaluaciones(max\_evaluaciones): 15000
 	\end{enumerate}
 	\newpage
 	\subsubsection{Pseudocódigo}
@@ -734,10 +737,10 @@ end
 	\begin{enumerate}
 		\item AM-(10,1.0): Se aplica la búsqueda local a todos los elementos de la poblacion.
 		\item AM-(10,0.1): Se tiene una probabilidad de 0.1 para ver si un individuo de la población recibe búsqueda local o no.
-		\item AM-(10,0.1mej): Se aplica la búsqueda local a los 0.1*N mejores individuos de la población. N es el numero total de individuos.
+		\item AM-(10,0.1mej): Se aplica la búsqueda local a los 0.1*N mejores individuos de la población. N es el número total de individuos.
 	\end{enumerate}
 
-	A la hora de calcular el numero de evaluaciones que realizamos tendremos que tener en cuenta también las usadas por el algoritmos de búsqueda.
+	A la hora de calcular el número de evaluaciones que realizamos tendremos que tener en cuenta también las usadas por el algoritmos de búsqueda.
 
 	\subsubsection{Parámetros}
 	Los parámetros son muy parecidos al AGG con los cambios en el Tamaño de la población y 
@@ -747,11 +750,11 @@ end
 		\item Probabilidad de cruce(prob\_cruce): 1. Siempre cruzan los padres seleccionados.
 		\item Probabilidad de mutación(prob\_mutacion): 0.001
 		\item Número de evaluaciones(max\_evaluaciones): 15000
-		\item Número de vecinos BL: 2*N siendo N el numero de genes de un individuo de la poblacion.
+		\item Número de vecinos BL: 2*N siendo N el número de genes de un individuo de la poblacion.
 	\end{enumerate}
 
 	\subsubsection{Pseudocódigo}
-	Como he mencionado anteriormente el pseudocódigo es exactamente el mismo que el AGG con el cambio de que añadimos las búsquedas después de las mutaciones. Voy a realizar solo el pseudocódigo de cada tipo de memético y no incluiré todo el código, puesto que ya esta bien explicado en el apartado de AGG. Para utilizar la búsqueda local en los meméticos he realizado unas modificaciones que nos devuelve el numero de evaluaciones que ha realizado, puesto que en algunas pasadas no necesita realizar la evaluación. La bl devuelve el vector de pesos, la funcion objetivos y el numero de evaluaciones realizadas.
+	Como he mencionado anteriormente el pseudocódigo es exactamente el mismo que el AGG con el cambio de que añadimos las búsquedas después de las mutaciones. Voy a realizar solo el pseudocódigo de cada tipo de memético y no incluiré todo el código, puesto que ya esta bien explicado en el apartado de AGG. Para utilizar la búsqueda local en los meméticos he realizado unas modificaciones que nos devuelve el número de evaluaciones que ha realizado, puesto que en algunas pasadas no necesita realizar la evaluación. La bl devuelve el vector de pesos, la funcion objetivos y el número de evaluaciones realizadas.
 	
 
 	
@@ -806,7 +809,7 @@ mutacion = randon en rango [0,1]
 	end	
 end
 	\end{lstlisting}
-	
+	\newpage
 	
 	
 	\section{Algoritmo de comparación}
@@ -860,62 +863,178 @@ end
 	}
 	\end{lstlisting}
 	
+	En el caso de obtener los resultados de los algoritmos que trabajan con poblaciones, una vez termina de ejecutar el algoritmo y tengo la poblacion final me quedo con el mejor individuo de esta y le utilizo el uno\_nn para obtener su tasa de acierto , reducción y su función objetivo. 
 	
 	
-	
+	\newpage
 	
 	\section{Explicación de desarrollo de la práctica}
 	La he realizado en python por la gran cantidad de librerías y código ya aportado por estas para el tratamiento y clasificación de este.
 	Aparte de ser un lenguaje que te permite implementar mas rápido los proyectos.
 	Al ser python no hace falta hacer make ni ningún tipo de constructor para ejecutarla simplemente se ejecuta el fichero en el interprete de comandos.
 	
-	En el main he puesto un for que cicla tres veces para calcular los datos de cada uno de los algoritmos con cada uno de los ficheros de datos dado. Los datos se muestran cuando se han ejecutado las 5 particiones distintas que podremos tener con todos los tres algoritmos de esta practica. Puede tardar en mostrar los datos debido a que los tiempos para la ejecución para la búsqueda local tardan mas que los demás. Esto retrasa la muestra de datos.
+	En el main he puesto un for que cicla siete veces para calcular los datos de cada uno de los algoritmos con cada uno de los ficheros de datos dado. Los datos se muestran cuando se han ejecutado las 5 particiones distintas que podremos tener con todos los tres algoritmos de esta practica. Puede tardar en mostrar los datos debido a que los tiempos para la ejecución para la búsqueda local tardan mas que los demás. Esto retrasa la muestra de datos.
 	
 	Si se quiere mostrar los datos de un solo algoritmo de búsqueda solo se tiene que comentar la llamada a este. Al tener las matrices donde almacenado los datos al inicio a 0 no dara error solamente mostrara los datos del algoritmos comentado como todo 0.
 	\section{Análisis de resultados}
-	\subsubsection{Semilla}
-	La semilla utilizada ha sido 14 y tengo un parámetro definido al principio del scrip llamado semilla para poder cambiarlo.
+	\subsection{Semilla}
+	La semilla utilizada ha sido 1 y tengo un parámetro definido al principio del scrip llamado semilla para poder cambiarlo.
 	
-	\subsubsection{Valores utilizados}	
+	\subsection{Valores utilizados}	
 	Los valores utilizados han sido los especificados en la practica, no cambien ninguno mas que para hacer algunas pruebas que no he tenido en cuenta para la practica. Los valores los tengo definidos al principio del script mediante variables para que se fácil la modificación sin tener que estar tocando todo el código.
-	
-	\subsubsection{Tablas de resultado}
 	\newpage
-	\begin{figure}
+	\subsection{Analisis de la practica 1}
+	\subsubsection{Tablas de resultado practica 1}
+	
+	Separaremos las tablas por los tipos de algoritmos a los que pertenece para ser mas fácil encontrarlas.
+	\begin{figure}[H]
 		\centering
-		\includegraphics[width=1\linewidth]{screen3}
+		\includegraphics[width=1\linewidth]{screenshot004}
 		\caption{}
-		\label{fig:screen3}
+		\label{fig:screenshot004}
 	\end{figure}
 	
 	
+	\subsubsection{Análisis de resultados practica 1}
+	Como se ve en las tablas el la BL siempre gana en la función objetivo, esto es debido que obtiene una tasa de reducción muy superior a los otros dos algoritmos. Al tener el valor para calcular la función objetivo con 0.5 se le esta dando la misma importancia a reducir la tasa de acierto y la tasa de reducción. Por este motivo en términos de función objetivo el mejor algoritmos de estos tres es la BL. El problema de la BL es que en tasa de acierto no suele ser el mejor en ninguna de los conjunto de datos. Si no tenemos en cuenta la tasa de reducción no podríamos elegir un mejor algoritmo puesto que en unos conjuntos de datos salen vencedor el RELIEF y en otros el 1-NN, pero la diferencia entre el porcentaje de acierto entre uno u otro suele ser muy pequeño. La búsqueda local en este caso se suele situar muy cercano a los dos superando a algunas veces a uno de los dos. Pero nunca consigue situarse como el que mas tasa de acierto tiene.
+	
+	\subsubsection{Tiempos de ejecución resultados practica1 }
+		El tiempo de ejecución de menor a mayor como era obvio el que menos tarda es el 1-nn puesto que los otros dos utilizan a este para la clasificación. Es prácticamente instantáneo
+	
+	Lo sigue el RELIEF que si el anterior tarda como el doble o triple que esta pero tampoco es un tiempo considerable.
+	
+	La búsqueda local es la mas lenta. Conseguí reducirla mucho al tener en cuenta que hay ocasiones en las que no hacia falta volver a valorar un peso porque no es posible que este mejore. Siendo los datos en lo que mas tarda los que mas número de características por elemento tienen.
 	
 	
-	
-	
-	
-	\subsubsection{Análisis de resultados}
-	Los resultados obtenidos nos muestra que la búsqueda local es muy superior a las otras en cuanto a obtener mejores resultados y la que mayor tasa de reducción. Esto se debe a que es la que mas opciones comprueba y siempre se va quedando con la mejor. Con esto evita perder buenas soluciones. Ademas al solo aceptar la mutación cuando mejora tiende a mejorar rápido hasta que se cumplen las 20*n iteraciones sin mejora. Estas iteraciones sin mejora son siempre la causa de que termine el algoritmo sin llegar nunca a el máximo de vecinos generado. Suele generar unos 7000 vecinos la vez que mas y normalmente ronda entre 2000 y 4000 en textura por ejemplo.
-	
-	El siguiente que mejor resultados me suele dar es el RELIEF aunque el 1-nn no se diferencia tanto de el. Esto se trata a que el RELIEF si utiliza los datos de entrenamiento para intentar mejorar mediante la ponderación de los pesos. El 1-nn depende de lo parecidos que sean las particiones de entrenamiento y test puesto que no obtienen ningún tipo de mejora para aproximar sus datos a los de entrenamiento.
-	
-	Algo curioso es que en los ficheros de IONOSPHERE RELIEF siempre me reduce el mismo numero de pesos. Imagino que podrá ser por pesos que son muy parecidos para todos los elementos de la muestra. Y por eso los tiende a reducir al no ser significativos.
-	
-	El mejor conjunto de datos para el ajuste es textura. Llegando a obtener mas de 90\% de media para todos los datos. El mas difícil de clasificar correctamente es el colposcopy. Aunque en la función de evaluación mejora mucho colopscopy porque suele ser tener una buena tasa de reducción. Y al darle la misma importancia a la clasificación y la reducido eso hace que se la que mejor función objetivo tenga. Esto no se cumple por ejemplo en el 1-nn al no tener reducción es la que peor función objetivo tiene
-	
-	En la búsqueda local me sorprende que se capaz de ajustar tanto teniendo tasa reducción tan altas. Entiendo que con eso evitara mucho ruido que dan los datos eliminados
-	
-	\subsubsection{Tiempo de ejecución}
-	El tiempo de ejecución de menor a mayor como era obvio el que menos tarda es el 1-nn puesto que los otros dos utilizan a este para la clasificación. Es prácticamente instantáneo
-	
-	Lo sigue el RELIEF que si el anterior tarda como el doble triple que esta pero tampoco es un tiempo considerable.
-	
-	La búsqueda local es mucho mas lenta. Conseguí reducirla mucho al tener en cuenta que hay ocasiones en las que no hacia falta volver a valorar un peso porque no es posible que este mejore. Llegue a bajar de tardar unos 10 minutos de media partición a 1.25 minutos la que mas me puede tardar. También es verdad que depende de la semilla en algunas condiciones. Siendo los datos en lo que mas tarda los que mas numero de características por elemento tienen.
-	
-	
+	\subsubsection{Conclusión final resultados practica 1}
+	No podríamos elegir uno entre los tres puesto que cada uno tiene sus puntos fuertes. Lo bueno de la búsqueda local es que reduciendo mas del doble que el RELIEF no perdemos mas de 5\% en el peor caso. Esto nos puede venir bien para saber que características de nuestros conjuntos son las que mas peso tienen a la hora de clasificar. En cambio siempre es superada por uno de los otros dos algoritmos como mínimo a la hora de clasificar los datos.
 
+	\subsection{Análisis de AGG}
+	\subsubsection{Tablas de AGG}
+	Se tendrá una tabla con cada uno de los cruces realizado.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot005}
+		\caption{}
+		\label{fig:screenshot005}
+	\end{figure}
+	
+	\subsubsection{Análisis de resultado AGG}
+	En este caso el cruce BLX  es superior en función objetivo al cruce martinico al obtener entre un 3\% y 7\%. Quitando el conjunto de datos de colposcopy, en los demás los dos algoritmos están muy próximos en tasa de acierto. El problema del cruce aritmético es que reduce un poco peor que el BLX y al estar igualados en clase el BLX destaca un poco en la función objetivo al obtener mas reducción. BLX reduce mejor al permitir que los genes de los hijos puedan tener valores inferiores al mínimo de los padres. En cambio en el cruce aritmético esto no se puede dar. Para conseguir valores en los hijos menores que 0.2 uno de los genes de los padres tendría que ser menor a 0.2.
+	
+	En tasa de clase estan muy igualados en todos los conjuntos de datos menos en colposcopy donde el blx le saca un 6\%
+	\subsubsection{Tiempos de ejecución de AGG}
+	El tiempo de ejecución del cruce aritmético es superior a tiempo con el cruce blx. Esto es debido a que el cruce aritmético genera un mayor número de aleatorios (uno por cada gen del vector de pesos).
+	\subsubsection{Conclusión final de AGG}
+	En AGG me quedo con el cruce blx puesto que es mas rápido y siempre esta por encima en tasa de reducción y función objetivo. Ademas en los únicos casos en los que el aritmético ha gando al blx en tasa de clasificación ha sido por una diferencia menor a un 1\%
+	
+	\subsection{Análisis de AGE}
+	Igual que en el apartado anterior compararemos los dos cruces pero esta vez para los algoritmos genéticos estacionarios.
+	
+	\subsubsection{Tablas de AGE}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot006}
+		\caption{}
+		\label{fig:screenshot006}
+	\end{figure}
+	
+	
+	\subsubsection{Análisis de resultado AGE}
+	En el generacional seguimos teniendo al cruce blx por encima del aritmético. Aunque en este caso están mucho mas próximo con una diferencia máxima en la función objetivo de un 2\%. En este caso la tasa de clase esta muy igualada, lo que marca esa pequeña diferencia es que el blx sigue teniendo una mejor tasa de reducción.
+	
+	\subsubsection{Tiempos de ejecución de AGE}
+	En este caso los tiempos de ejecución son menores en el cruce aritmético que en el blx. Esto me hace pensear dos posibilidades. Esto podría darse por dos razones.
+	\begin{enumerate}
+		\item En las mediciones del AGGAritmético el procesador estaba sobrecargado por algunos procesos externos a la ejecución del scirpt.
+		\item Generar un gran número de aleatorios de forma continuada al tener muchos mas cruces en el AGG que en el AGE se sobrecarga el procesador y por eso en el AGE reduce el tiempo. Si fuera esta opción podría tardar mas el cruce blx en el AGE debido a que tiene una mayor carga de operaciones y comprobaciones que el aritmético. 
+	\end{enumerate}
+	
+	\subsubsection{Conclusión final de AGE}
+	En este caso los dos algoritmos están muy igualados y cualquiera de los dos nos podría dar resultados muy parecidos aunque el cruce blx sigue siendo un poquito mejor.
+	
+	\subsection{Análisis de AGE vs AGG}
+	Vamos a comparar los resultados sin tener en cuenta el tipo de cruce elegido. Lo que compararemos es si hay mejora entre el AGG y el AGE con el mismo cruce.
+	\subsubsection{Tablas de AGE vs AGG}
+	Vamos a comparar las medias obtenidas para los cuatro algoritmos.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot008}
+		\caption{}
+		\label{fig:screenshot008}
+	\end{figure}
+
+	\subsubsection{Análisis de resultado AGE vs AGG}
+	En este caso los algoritmos AGG son superiores en casi todos los caso que los algoritmos AGE. Esto puede darse a que en el AGG tengamos una mayor exploración al no estar obligando al algoritmos a sustituir siempre los hijos  nuevos si son mejores que los peores individuos de la poblacion. Esto hace que puedan entrar soluciones que en principio sean peores pero que puedan sacarnos de algún optimo local. 
+
+	\subsubsection{Conclusión final AGE vs AGG}
+	En este caso me quedaría con los algoritmos AGG y mas específicamente con el AGG	con cruce blx que esta un poquito por encima de las otras tres opciones.
+	
+	
+	\subsection{Análisis de AM}
+	\subsubsection{Tablas de AM}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot009}
+		\caption{}
+		\label{fig:screenshot009}
+	\end{figure}
+	\subsubsection{Análisis de resultados AM}
+	En este caso están todos muy igualados. Con una diferencia máxima de in 1\% en la función objetivo. Ninguno destaca por encima del otro en clasificación o en reducción. 
+	
+	\subsubsection{Tiempos de ejecución AM}
+	En este apartados estamos igual que el apartado anterior. Ninguno destaca por encima de otro para poder decidir que uno de ellos es mas rápidos. Las diferencias que se dan son mínimas y podrían darse por una sobrecarga en le procesador.
+	
+	\subsubsection{Conclusión final AM}
+	No propria elegir uno por encima de los demás puesto que tanto en tiempo como en función objetivo son prácticamente idénticos.
+	
+	\subsection{Análisis AM vs AG}
+	\subsubsection{Tablas de AM vs AG}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot010}
+		\caption{}
+		\label{fig:screenshot010}
+	\end{figure}
+
+	\subsubsection{Análisis de resultados AM vs AG}
+	En este caso es muy claro que los vencedores en cuanto a función objetivo son los meméticos. Los tres algoritmos meméticos están siempre por encima de todos los algoritmos genéticos en función objetivo debido a que tienen de media un 3\% mas de tasa de reducción como mínimo al compararlo con el AGG con cruce blx que es el que mas se les aproxima. Esto se puede deber a que la búsqueda local con la mutación que tiene para generar vecinos conseguía una muy buena reducción. En cambio los AG están igualados o mejoran un poco la tasa de clasificación  de los AM. 
+	
+	\subsubsection{Tiempos ejecución AM vs AG}
+	En este apartado si son claramente mejores los algoritmos memeticos puesto que las evaluaciones que utilizamos par ala búsqueda local son mucho menos costosas que realizar los torneos binarios, cruces y las mutaciones. Al perder evaluaciones en la búsqueda local realizaremos muchos menos ejecuciones del bucle y ahorramos unos 15 y 20 segundo. 
+	
+	\subsubsection{Conclusión final AM vs AG}
+	Los algoritmos meméticos pierden un porcentaje muy pequeño de tasa de clasificación pero ganan en la tasa de reducción y tiempo con una diferencia mucho mayor.
+	
+	\subsection{Análisis final de todos los algoritmos}
+	Con todo lo explicado anteriormente vamos ha realizar una comparación final entre todos los algoritmos por encima.
+	\subsubsection{Tablas de tiempos}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot011}
+		\caption{}
+		\label{fig:screenshot011}
+	\end{figure}
+
+	\subsubsection{Análisis de resultados}
+	Con los datos visto hasta ahora los meméticos son los que mejores resultados nos han estado dando en las comparaciones realizadas. En este caso vamos a comparar los meméticos con la búsqueda local. 
+	
+	La búsqueda local esta siempre entre los mejores en todos los conjuntos de datos. Y tiene un muy buen equilibrio entre tasa de clase y de reducción. No tiene nada que envidar en esto a los meméticos. Tienen mas o menos la misma función objetivo.  
+	
+	\subsubsection{Tiempos de ejecución}
+	En tiempos de ejecución  los algoritmos de la primera practica son muy superiores tardando entre unas 10 o 20 veces menos la búsqueda local que es el mas lento de estos tres.
+	
+	\subsubsection{Conclusiones finales}
+	Visto que la búsqueda local consigue las mismas optimizaciones que los algoritmos meméticos en muchísimo menos tiempo, me quedaría con la búsqueda local. 
+	
+	
+	
+	
+	
+	
 	\section{Bibliografía}
 	No he usado nada fuera de las propias paginas de información de python o de las librerías utilizadas como podría ser la de numpy.
-
+	
+	\
   
 \end{document}
