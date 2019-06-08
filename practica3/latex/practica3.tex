@@ -30,7 +30,7 @@
 			\vspace*{1cm}
 			\date{} % para que no aparezca la fecha la dejo en blanco
 			\Huge
-			\textbf{Practica 2: Algoritmos Genéticos y Meméticos}
+			\textbf{Practica 3: Algoritmos ILS ES y ED}
 			
 			\vspace{0.5cm}
 			\LARGE
@@ -1286,12 +1286,31 @@ end
 		\caption{}
 		\label{fig:screenshot013}
 	\end{figure}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot014}
+		\caption{}
+		\label{fig:screenshot014}
+	\end{figure}
 	
 	
 	\subsubsection{Análisis de resultados}
+	Viendo los datos se ve claramente que el algoritmo EDRand es el que consigue mejores resultados en la función objetivo. Esto se da porque siempre consigue el mejor resultado para la reducción y a la hora del porcentaje de acierto solo queda por detrás en los ficheros colposcopy y ionosphere, aunque la diferencia en reducción es mayor a la que consiguen sacarle en acierto. EDCurrent-to-best gana en clasificacion en todos menos en texture a EDRand y en texture solo pierde por un 1\%. El problema de current to best viene dado a que tiene bastante peor reducción que EDRand y esto lo hace quedar peor en función objetivo. EDRan suele ganarle por una media de un 10\% en reducción.
+	Si fuera por función objetivo como he dicho anteriormente me quedaría con EDRand. Pero si tenemos en el tiempo de ejecucion en cuenta esto cambiaría. Tanto ILS como ES son mucho mas rápidos en ejecutar tardando IlS un 80\% menos que cualquiera de los dos ED y ES consigue hasta un 90\% menos. En estos cosos. Siendo por tanto el mas rápido ES. 
 	
+	Si a la hora de elegir uno de estos algoritmos fuera importante que resolviera el problema en el menor tiempo posible me quedaría con ES que aunque este muy igualado en función objetivo con ILS, le gana en porcentaje de clasificación a ILS en todos los conjuntos de datos. Ils en cambio tiene mejor reducción por lo que le ayuda a acercarse mas a la función objetivo de ES. Ademas ES suele tardar un 50\% menos en ejecutar. 
 	
+	La conclusión final seria que si se quiere la mejor función objetivo posible me quedaría con EDRand, pero si primara el tiempo también seria una mejor opción ES que suele tener muy buena tasa de acierto en muy poco tiempo.
 	
+	\subsection{Comparación algoritmos practica3 con el resto}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\linewidth]{screenshot015}
+		\caption{}
+		\label{fig:screenshot015}
+	\end{figure}
+	
+	En este caso tenemos algo parecido al apartado anterior. El algoritmo EDRand es el que mejores resultados suele obtener y un tiempo muy parecido a los mememticos que fueron los que mejor resultados obtuvieron de la practica 1 y 2. Teniendo en cuenta que ED suele tardar unos segundos menos me quedaría con este. En cambio si el tiempo es importante ES estaría muy igualado con búsqueda local en función objetivo, aunque la búsqueda local tarde la mitad de tiempo que ES en ejecutar. En este caso si elegiría a  la búsqueda local como la mejor opción con si el tiempo es importante
 	
 	
 	

@@ -70,4 +70,5 @@
 \contentsline {subsubsection}{\numberline {6.8.4}Conclusi\IeC {\'o}n final AM vs AG}{32}
 \contentsline {subsection}{\numberline {6.9}An\IeC {\'a}lisis de pr\IeC {\'a}ctica 3}{33}
 \contentsline {subsubsection}{\numberline {6.9.1}An\IeC {\'a}lisis de resultados}{33}
-\contentsline {section}{\numberline {7}Bibliograf\IeC {\'\i }a}{33}
+\contentsline {subsection}{\numberline {6.10}Comparaci\IeC {\'o}n algoritmos practica3 con el resto}{34}
+\contentsline {section}{\numberline {7}Bibliograf\IeC {\'\i }a}{35}
