@@ -1106,12 +1106,12 @@ def memeticoBusquedaMejores(training, test):
     return datos_algoritmo 
 
 
-def enfriamientoSimulado(training, test):
+def ES(training, test):
     train_datos = training[:, 0:-1]
     train_clases = np.array(training[:, -1], int)
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
-    
+    start_time = time()
     num_genes = np.size(train_datos,1)
     
     #inicializo y evaluo la solucion
@@ -1162,8 +1162,17 @@ def enfriamientoSimulado(training, test):
         beta = (tem_inicial - tem_final)/( M * tem_inicial * tem_final)
         temperatura = temperatura / (1 + beta * temperatura)
       
-    print(mejor_eval)  
-    print(obtenerFitness(mejor_solucion, train_datos, train_clases))      
+    tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,mejor_solucion)
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo   
         
 
 def ILS(training, test):
@@ -1172,6 +1181,7 @@ def ILS(training, test):
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
     
+    start_time = time()
     num_genes = np.size(train_datos,1)
     
     #inicializo y evaluo la solucion
@@ -1185,8 +1195,10 @@ def ILS(training, test):
     
     for i in range(0,14):
         nueva_solucion = np.copy(solucion)
+        #pos_genes = np.random.randint(0,num_genes,size = total_mutaciones)
+        pos_genes = np.random.permutation(num_genes)[0:total_mutaciones]
         for i in range(0,total_mutaciones):
-            pos_genes = np.random.randint(0,num_genes,size = total_mutaciones)
+            
             nueva_solucion = mutarGen(nueva_solucion, pos_genes[i])
             
         eval_nueva_solucion = obtenerFitness(nueva_solucion,train_datos,train_clases)
@@ -1196,7 +1208,17 @@ def ILS(training, test):
             solucion = nueva_solucion
             eval_solucion = eval_nueva_solucion
     
-    print(eval_solucion)
+    tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,solucion)
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo
     
     #poblacion[mejor_individuo], eval_poblacion[mejor_individuo]  = BL(train_datos,train_clases,poblacion[mejor_individuo],eval_poblacion[mejor_individuo])
     
@@ -1206,6 +1228,7 @@ def EDRand(training, test):
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
     
+    start_time = time()
     num_genes = np.size(train_datos,1)
     poblacion = inicializarPoblacion(50,num_genes)
     eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion)
@@ -1246,9 +1269,19 @@ def EDRand(training, test):
                 if eval_mutado > eval_mejor:
                     mejor = mutado
                     eval_mejor = eval_mutado
-            #print(eval_mutado)
+    
             
-    print(eval_mejor)
+    tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,mejor)
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo 
     
 def EDCurrentToBest(training, test):
     train_datos = training[:, 0:-1]
@@ -1256,6 +1289,7 @@ def EDCurrentToBest(training, test):
     test_datos = test[:, 0:-1]
     test_clases = np.array(test[:, -1], int)
     
+    start_time = time()
     num_genes = np.size(train_datos,1)
     poblacion = inicializarPoblacion(50,num_genes)
     eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion)
@@ -1265,7 +1299,6 @@ def EDCurrentToBest(training, test):
     eval_mejor = eval_poblacion[pos_mejor]
     
     num_evaluaciones = 0
-    print(eval_mejor)
     while num_evaluaciones < 15000:
         for i in range(0,50):
             indices = np.random.permutation(50)[0:3]
@@ -1298,7 +1331,19 @@ def EDCurrentToBest(training, test):
                     eval_mejor = eval_mutado
             #print(eval_mutado)
             
-    print(eval_mejor)
+    tiempo = time() - start_time 
+    tasa_clase, tasa_reduccion, funcion_objetivo = uno_nn(train_datos,train_clases,test_datos,test_clases,mejor)
+    
+    
+    datos_algoritmo = np.zeros(4)
+    datos_algoritmo[0] = tasa_clase
+    datos_algoritmo[1] = tasa_reduccion
+    datos_algoritmo[2] = funcion_objetivo
+    datos_algoritmo[3] = tiempo
+            
+    return datos_algoritmo 
+
+            
     
     
 def main():
@@ -1313,18 +1358,16 @@ def main():
         datos_BL = np.zeros((6,4))
         datos_1NN = np.zeros((6,4))
         """
-        datos_AGGBLX = np.zeros((6,4))
-        datos_AGGAritmetico = np.zeros((6,4))
-        datos_AGEBLX = np.zeros((6,4))
-        datos_AGEAritmetico = np.zeros((6,4))
-        datos_memeticoMejores = np.zeros((6,4))
-        datos_memeticoTodos = np.zeros((6,4))
-        datos_memeticoProbabilida = np.zeros((6,4))
+        datos_ES= np.zeros((6,4))
+        datos_ILS = np.zeros((6,4))
+        datos_DERAND = np.zeros((6,4))
+        datos_DEBEST= np.zeros((6,4))
+
         print("------------------------")
         
         #Cargo uno de los ficheros
         if i == 0:
-            data = arff.loadarff(texture)
+            data = arff.loadarff(colopscopy)
             print("MEDIDAS COLOPSCOPY")
             
         elif i == 1: 
@@ -1332,7 +1375,8 @@ def main():
             print("MEDIDAS IONOSPHERE")
         else:
             
-            data = arff.loadarff(colopscopy)
+            
+            data = arff.loadarff(texture)
             print("MEDIDAS TEXTURE")
         
         #separo los datos de las etiquetas de clases.
@@ -1362,68 +1406,51 @@ def main():
         skf = StratifiedKFold(n_splits=num_particiones, shuffle=True, random_state=semilla)
         
         
-        for i in range(7):
+        for i in range(4):
             #indicla la posicion en la que se almacenaran los datos del algoritmo
             i_particion = 0
             for train, test in skf.split(datos, clase_test):  
                 #nos quedamos con los datos de l aparticion de train y de test
                 train_datos = matriz_final[train,:]
                 test_datos = matriz_final[test,:]
-                EDCurrentToBest(train_datos, test_datos)
+                #print(ILS(train_datos,test_datos))
                
-                """if i == 0:
-                    datos_AGGBLX[i_particion] = AGG_BLX(train_datos,test_datos)
+                if i == 0:
+                    datos_ES[i_particion] = ES(train_datos,test_datos)
 
                 if i == 1:
-                    datos_AGGAritmetico[i_particion] = AGG_Aritmetico(train_datos,test_datos)
+                    datos_ILS[i_particion] = ILS(train_datos,test_datos)
 
                 if i == 2:
-                    datos_AGEBLX[i_particion] = AGE_BLX(train_datos,test_datos)
+                    datos_DERAND[i_particion] = EDRand(train_datos,test_datos)
 
                 if i == 3:
-                    datos_AGEAritmetico[i_particion] = AGE_Aritmetico(train_datos,test_datos)
+                    datos_DEBEST[i_particion] = EDCurrentToBest(train_datos,test_datos)
                 
                 
-
-                if i == 4:
-                    datos_memeticoTodos[i_particion] = memeticoBusquedaTotal(train_datos,test_datos)
-
-                if i == 5:
-                    datos_memeticoProbabilida[i_particion] = memeticoProbabilidad(train_datos,test_datos)
-                
-                if i == 6:
-                    datos_memeticoMejores[i_particion] = memeticoBusquedaMejores(train_datos,test_datos)
             
-                i_particion += 1"""
+                i_particion += 1
                 
             
             #mostramos los datos al terminar los tres algoritmos
 
-            """if i == 0:
-                print("\nDatos AGGBLX\n")
-                dibujarTabla(datos_AGGBLX)
+            if i == 0:
+                print("\nDatos Enfriamiento Simulado\n")
+                dibujarTabla(datos_ES)
                 
             if i == 1:
-                print("\nDatos AGGAritmetico\n")
-                dibujarTabla(datos_AGGAritmetico)
+                print("\nDatos Busqueda Local Reiterada\n")
+                dibujarTabla(datos_ILS)
+                
             if i == 2:
-                print("\nDatos AGEblx\n")
-                dibujarTabla(datos_AGEBLX)
+                print("\nDatos Evolución Diferencial Rand\n")
+                dibujarTabla(datos_DERAND)
                 
             if i == 3:
-                print("\nDatos AGEAritmetico\n")
-                dibujarTabla(datos_AGEAritmetico)
+                print("\nDatos Evolución Diferencial Current to Best\n")
+                dibujarTabla(datos_DEBEST)
     
-            if i == 4:
-                print("\nDatos AM-(10,1.0)\n")
-                dibujarTabla(datos_memeticoTodos)
-                
-            if i == 5:
-                print("\nDatos AM-(10,0.1)\n")
-                dibujarTabla(datos_memeticoProbabilida)
-            if i == 6:
-                print("\nDatos AM-(10,0.1mej)\n")
-                dibujarTabla(datos_memeticoMejores)"""
+            
     
 
 
