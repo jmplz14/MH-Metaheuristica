@@ -1199,7 +1199,7 @@ def ILS(training, test):
         pos_genes = np.random.permutation(num_genes)[0:total_mutaciones]
         for i in range(0,total_mutaciones):
             
-            nueva_solucion = mutarGen(nueva_solucion, pos_genes[i])
+            nueva_solucion = mutarGenILS(nueva_solucion, pos_genes[i])
             
         eval_nueva_solucion = obtenerFitness(nueva_solucion,train_datos,train_clases)
         nueva_solucion, eval_nueva_solucion = BLILS(train_datos, train_clases, nueva_solucion, eval_nueva_solucion)

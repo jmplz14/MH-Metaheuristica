@@ -929,9 +929,9 @@ end
 	\subsubsection{Pseudocódigo}
 	El pseudocódigo es el siguiente:
 	\begin{lstlisting}
-function ES(X,y):
+function ES(train_datos, train_clases):
 	
-	num_genes = size(X[0])
+	num_genes = size(train_datos[0])
 	
 	
 	solucion = random(0,1,num_genes)   
@@ -989,7 +989,102 @@ function ES(X,y):
 
 	\end{lstlisting}
 	\newpage
-	\subsection{Algoritmo Busqueda Local Reiterada}
+	\subsection{Algoritmo Búsqueda Local Reiterada}
+	Se basa en realizar un numero de búsquedas locales sobre una solución. Después de cada búsqueda local se realizara una mutación. Esta mutación es realizada igual que la explicada en el apartado 2 cambiando el sigma que en este caso sera de 0.4. Después de realizar la búsqueda local a la solución mutada se comprueba si esta mejora a la mejor solución que se ha encontrado y si mejora nos quedamos con esta.
+	
+	\subsubsection{Parámetros}
+	El numero de búsquedas locales viene dado por 15. La probabilidad de mutación de un gen sera de 10\% y la búsqueda local se limitara a 1000 iteraciones.
+	
+	\subsection{Pseudocódigo}
+	El pseudocódigo en en este caso es el siguiente:
+	
+	\begin{lstlisting}
+function ILS(train_clases, train_datos):
+	num_genes = np.size(train_datos,1)
+	
+	#inicializo y evaluo la solucion
+	solucion = random(0,1,num_genes)   
+	eval_solucion = obtenerFitness(solucion,train_datos,train_clases)
+	
+	solucion, eval_solucion = BLILS(train_datos, train_clases, solucion, eval_solucion)
+	total_mutaciones = int(0.1 * num_genes)
+	
+	
+	
+	for i in (0,14):
+		nueva_solucion = np.copy(solucion)
+		
+		pos_genes = np.random.permutation(num_genes)[0:total_mutaciones]
+		pos_genes = randomSinRepeticion(0,num_genes,total_mutaciones)
+		for i in range(0,total_mutaciones):
+		
+		nueva_solucion = mutarGen(nueva_solucion, pos_genes[i])
+		
+		
+		nueva_solucion, eval_nueva_solucion = BL(train_datos, train_clases, nueva_solucion)
+		
+		if eval_nueva_solucion > eval_solucion
+			solucion = nueva_solucion
+			eval_solucion = eval_nueva_solucion
+		end
+	end
+	return solucion
+end
+	\end{lstlisting}
+	
+	\subsection{Algoritmo Evolución Diferencial}
+	El algoritmo se inicia con una  población de tamaño 50. Esta población es inicializada aleatoriamente. Realizamos la evaluación de los elementos de la poblacion inicial y almacenamos el mejor. Una vez realizado esto el algoritmo pasa a a realizar uno de los dos cruces descritos en la seccion 2 (cruce rand y cruce current to best.) Una vez realizado el cruce si el nuevo elemento mejora al el individuo que actual, la nueva solución remplaza a esta en la población. También  comprobamos si esta nueva solución mejora al mejor actual, y si se da el caso almacenamos esta como nueva mejor solución.
+	
+	\subsubsection{Parámetros}
+	En este caso el algoritmo tendrá una probabilidad de cruce del 50\%. El criterio de parada es de 15000 evaluaciones de la función objetivo. 
+	
+	\subsection{Pseudocódigo}
+	Vamos a mostrar el pseudocódigo:
+	\begin{lstlisting}
+function EDCurrentToBest(train_datos, train_clases)
+	
+	num_genes = np.size(train_datos,1)
+	poblacion = inicializarPoblacion(50,num_genes)
+	eval_poblacion = evaluarPoblacion(train_datos, train_clases, poblacion)
+	
+	pos_mejor = maximo(eval_poblacion)
+	mejor = poblacion[pos_mejor]
+	eval_mejor = eval_poblacion[pos_mejor]
+	
+	num_evaluaciones = 0
+	while num_evaluaciones < 15000
+		for i in (0,50):
+			#obtine tres nuemros aleatorios sin repeticion entre 0 - 50. 
+			indices = randomSinRepeticion(0,50,3)
+			
+			#devuelve la posicion en la que se encuentra. -1 si no se encuentra
+			pos_i = buscar(indices,i)
+			
+			if pos_i != -1
+				#Elimina la posicion i del array
+				indices = delete(indices, pos_i)
+			end
+			
+			p1 = poblacion[indices[0]]
+			p2 = poblacion[indices[1]]
+			
+			mutado = cruzeCurrentToBest(p1,p2,mejor,poblacion[i])
+			
+			
+			eval_mutado = 100 * obtenerFitness(mutado,train_datos,train_clases);
+			num_evaluaciones += 1
+			if eval_mutado > eval_poblacion[i]:
+			poblacion[i] = mutado
+			eval_poblacion[i] = eval_mutado
+			
+			if eval_mutado > eval_mejor:
+			mejor = mutado
+			eval_mejor = eval_mutado
+		end
+	end
+end
+	\end{lstlisting}
+	El pseudocodigo para el cruce rand seria el mismo obteniendo tres padres en vez de 2 y llamando a la función cruzeRand(p1,p2,p3,poblacion[i]).
 	\section{Algoritmo de comparación}
 
 	
@@ -1059,7 +1154,7 @@ end
 	La semilla utilizada ha sido 1 y tengo un parámetro definido al principio del scrip llamado semilla para poder cambiarlo.
 	
 	\subsection{Valores utilizados}	
-	Los valores utilizados han sido los especificados en la practica, no cambien ninguno mas que para hacer algunas pruebas que no he tenido en cuenta para la practica. Los valores los tengo definidos al principio del script mediante variables para que se fácil la modificación sin tener que estar tocando todo el código.
+	Los valores utilizados han sido los especificados en la practica, no cambien ninguno mas que para hacer algunas pruebas que no he tenido en cuenta para la practica. 
 	\newpage
 	\subsection{Analisis de la practica 1}
 	\subsubsection{Tablas de resultado practica 1}
@@ -1184,26 +1279,17 @@ end
 	\subsubsection{Conclusión final AM vs AG}
 	Los algoritmos meméticos pierden un porcentaje muy pequeño de tasa de clasificación pero ganan en la tasa de reducción y tiempo con una diferencia mucho mayor.
 	
-	\subsection{Análisis final de todos los algoritmos}
-	Con todo lo explicado anteriormente vamos ha realizar una comparación final entre todos los algoritmos por encima.
-	\subsubsection{Tablas de tiempos}
+	\subsection{Análisis de práctica 3}
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=1\linewidth]{screenshot011}
+		\includegraphics[width=1\linewidth]{screenshot013}
 		\caption{}
-		\label{fig:screenshot011}
+		\label{fig:screenshot013}
 	\end{figure}
-
+	
+	
 	\subsubsection{Análisis de resultados}
-	Con los datos visto hasta ahora los meméticos son los que mejores resultados nos han estado dando en las comparaciones realizadas. En este caso vamos a comparar los meméticos con la búsqueda local. 
 	
-	La búsqueda local esta siempre entre los mejores en todos los conjuntos de datos. Y tiene un muy buen equilibrio entre tasa de clase y de reducción. No tiene nada que envidar en esto a los meméticos. Tienen mas o menos la misma función objetivo.  
-	
-	\subsubsection{Tiempos de ejecución}
-	En tiempos de ejecución  los algoritmos de la primera practica son muy superiores tardando entre unas 10 o 20 veces menos la búsqueda local que es el mas lento de estos tres.
-	
-	\subsubsection{Conclusiones finales}
-	Visto que la búsqueda local consigue las mismas optimizaciones que los algoritmos meméticos en muchísimo menos tiempo, me quedaría con la búsqueda local. 
 	
 	
 	

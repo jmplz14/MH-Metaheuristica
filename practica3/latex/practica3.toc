@@ -26,43 +26,48 @@
 \contentsline {subsubsection}{\numberline {3.6.1}Par\IeC {\'a}metros}{18}
 \contentsline {subsubsection}{\numberline {3.6.2}Pseudoc\IeC {\'o}digo}{18}
 \contentsline {subsection}{\numberline {3.7}Algoritmo Enfriamiento Simulado(ES)}{20}
-\contentsline {section}{\numberline {4}Algoritmo de comparaci\IeC {\'o}n}{23}
-\contentsline {section}{\numberline {5}Explicaci\IeC {\'o}n de desarrollo de la pr\IeC {\'a}ctica}{24}
-\contentsline {section}{\numberline {6}An\IeC {\'a}lisis de resultados}{24}
-\contentsline {subsection}{\numberline {6.1}Semilla}{24}
-\contentsline {subsection}{\numberline {6.2}Valores utilizados}{24}
-\contentsline {subsection}{\numberline {6.3}Analisis de la practica 1}{25}
-\contentsline {subsubsection}{\numberline {6.3.1}Tablas de resultado practica 1}{25}
-\contentsline {subsubsection}{\numberline {6.3.2}An\IeC {\'a}lisis de resultados practica 1}{25}
-\contentsline {subsubsection}{\numberline {6.3.3}Tiempos de ejecuci\IeC {\'o}n resultados practica1 }{26}
-\contentsline {subsubsection}{\numberline {6.3.4}Conclusi\IeC {\'o}n final resultados practica 1}{26}
-\contentsline {subsection}{\numberline {6.4}An\IeC {\'a}lisis de AGG}{26}
-\contentsline {subsubsection}{\numberline {6.4.1}Tablas de AGG}{26}
-\contentsline {subsubsection}{\numberline {6.4.2}An\IeC {\'a}lisis de resultado AGG}{26}
-\contentsline {subsubsection}{\numberline {6.4.3}Tiempos de ejecuci\IeC {\'o}n de AGG}{27}
-\contentsline {subsubsection}{\numberline {6.4.4}Conclusi\IeC {\'o}n final de AGG}{27}
-\contentsline {subsection}{\numberline {6.5}An\IeC {\'a}lisis de AGE}{27}
-\contentsline {subsubsection}{\numberline {6.5.1}Tablas de AGE}{27}
-\contentsline {subsubsection}{\numberline {6.5.2}An\IeC {\'a}lisis de resultado AGE}{27}
-\contentsline {subsubsection}{\numberline {6.5.3}Tiempos de ejecuci\IeC {\'o}n de AGE}{28}
-\contentsline {subsubsection}{\numberline {6.5.4}Conclusi\IeC {\'o}n final de AGE}{28}
-\contentsline {subsection}{\numberline {6.6}An\IeC {\'a}lisis de AGE vs AGG}{28}
-\contentsline {subsubsection}{\numberline {6.6.1}Tablas de AGE vs AGG}{28}
-\contentsline {subsubsection}{\numberline {6.6.2}An\IeC {\'a}lisis de resultado AGE vs AGG}{28}
-\contentsline {subsubsection}{\numberline {6.6.3}Conclusi\IeC {\'o}n final AGE vs AGG}{29}
-\contentsline {subsection}{\numberline {6.7}An\IeC {\'a}lisis de AM}{29}
-\contentsline {subsubsection}{\numberline {6.7.1}Tablas de AM}{29}
-\contentsline {subsubsection}{\numberline {6.7.2}An\IeC {\'a}lisis de resultados AM}{29}
-\contentsline {subsubsection}{\numberline {6.7.3}Tiempos de ejecuci\IeC {\'o}n AM}{29}
-\contentsline {subsubsection}{\numberline {6.7.4}Conclusi\IeC {\'o}n final AM}{30}
-\contentsline {subsection}{\numberline {6.8}An\IeC {\'a}lisis AM vs AG}{30}
-\contentsline {subsubsection}{\numberline {6.8.1}Tablas de AM vs AG}{30}
-\contentsline {subsubsection}{\numberline {6.8.2}An\IeC {\'a}lisis de resultados AM vs AG}{30}
-\contentsline {subsubsection}{\numberline {6.8.3}Tiempos ejecuci\IeC {\'o}n AM vs AG}{30}
-\contentsline {subsubsection}{\numberline {6.8.4}Conclusi\IeC {\'o}n final AM vs AG}{30}
-\contentsline {subsection}{\numberline {6.9}An\IeC {\'a}lisis final de todos los algoritmos}{30}
-\contentsline {subsubsection}{\numberline {6.9.1}Tablas de tiempos}{31}
-\contentsline {subsubsection}{\numberline {6.9.2}An\IeC {\'a}lisis de resultados}{31}
-\contentsline {subsubsection}{\numberline {6.9.3}Tiempos de ejecuci\IeC {\'o}n}{31}
-\contentsline {subsubsection}{\numberline {6.9.4}Conclusiones finales}{31}
-\contentsline {section}{\numberline {7}Bibliograf\IeC {\'\i }a}{31}
+\contentsline {subsubsection}{\numberline {3.7.1}Par\IeC {\'a}metros}{20}
+\contentsline {subsubsection}{\numberline {3.7.2}Pseudoc\IeC {\'o}digo}{21}
+\contentsline {subsection}{\numberline {3.8}Algoritmo B\IeC {\'u}squeda Local Reiterada}{23}
+\contentsline {subsubsection}{\numberline {3.8.1}Par\IeC {\'a}metros}{23}
+\contentsline {subsection}{\numberline {3.9}Pseudoc\IeC {\'o}digo}{23}
+\contentsline {subsection}{\numberline {3.10}Algoritmo Evoluci\IeC {\'o}n Diferencial}{23}
+\contentsline {subsubsection}{\numberline {3.10.1}Par\IeC {\'a}metros}{24}
+\contentsline {subsection}{\numberline {3.11}Pseudoc\IeC {\'o}digo}{24}
+\contentsline {section}{\numberline {4}Algoritmo de comparaci\IeC {\'o}n}{25}
+\contentsline {section}{\numberline {5}Explicaci\IeC {\'o}n de desarrollo de la pr\IeC {\'a}ctica}{26}
+\contentsline {section}{\numberline {6}An\IeC {\'a}lisis de resultados}{26}
+\contentsline {subsection}{\numberline {6.1}Semilla}{26}
+\contentsline {subsection}{\numberline {6.2}Valores utilizados}{26}
+\contentsline {subsection}{\numberline {6.3}Analisis de la practica 1}{27}
+\contentsline {subsubsection}{\numberline {6.3.1}Tablas de resultado practica 1}{27}
+\contentsline {subsubsection}{\numberline {6.3.2}An\IeC {\'a}lisis de resultados practica 1}{27}
+\contentsline {subsubsection}{\numberline {6.3.3}Tiempos de ejecuci\IeC {\'o}n resultados practica1 }{28}
+\contentsline {subsubsection}{\numberline {6.3.4}Conclusi\IeC {\'o}n final resultados practica 1}{28}
+\contentsline {subsection}{\numberline {6.4}An\IeC {\'a}lisis de AGG}{28}
+\contentsline {subsubsection}{\numberline {6.4.1}Tablas de AGG}{28}
+\contentsline {subsubsection}{\numberline {6.4.2}An\IeC {\'a}lisis de resultado AGG}{28}
+\contentsline {subsubsection}{\numberline {6.4.3}Tiempos de ejecuci\IeC {\'o}n de AGG}{29}
+\contentsline {subsubsection}{\numberline {6.4.4}Conclusi\IeC {\'o}n final de AGG}{29}
+\contentsline {subsection}{\numberline {6.5}An\IeC {\'a}lisis de AGE}{29}
+\contentsline {subsubsection}{\numberline {6.5.1}Tablas de AGE}{29}
+\contentsline {subsubsection}{\numberline {6.5.2}An\IeC {\'a}lisis de resultado AGE}{29}
+\contentsline {subsubsection}{\numberline {6.5.3}Tiempos de ejecuci\IeC {\'o}n de AGE}{30}
+\contentsline {subsubsection}{\numberline {6.5.4}Conclusi\IeC {\'o}n final de AGE}{30}
+\contentsline {subsection}{\numberline {6.6}An\IeC {\'a}lisis de AGE vs AGG}{30}
+\contentsline {subsubsection}{\numberline {6.6.1}Tablas de AGE vs AGG}{30}
+\contentsline {subsubsection}{\numberline {6.6.2}An\IeC {\'a}lisis de resultado AGE vs AGG}{30}
+\contentsline {subsubsection}{\numberline {6.6.3}Conclusi\IeC {\'o}n final AGE vs AGG}{31}
+\contentsline {subsection}{\numberline {6.7}An\IeC {\'a}lisis de AM}{31}
+\contentsline {subsubsection}{\numberline {6.7.1}Tablas de AM}{31}
+\contentsline {subsubsection}{\numberline {6.7.2}An\IeC {\'a}lisis de resultados AM}{31}
+\contentsline {subsubsection}{\numberline {6.7.3}Tiempos de ejecuci\IeC {\'o}n AM}{31}
+\contentsline {subsubsection}{\numberline {6.7.4}Conclusi\IeC {\'o}n final AM}{32}
+\contentsline {subsection}{\numberline {6.8}An\IeC {\'a}lisis AM vs AG}{32}
+\contentsline {subsubsection}{\numberline {6.8.1}Tablas de AM vs AG}{32}
+\contentsline {subsubsection}{\numberline {6.8.2}An\IeC {\'a}lisis de resultados AM vs AG}{32}
+\contentsline {subsubsection}{\numberline {6.8.3}Tiempos ejecuci\IeC {\'o}n AM vs AG}{32}
+\contentsline {subsubsection}{\numberline {6.8.4}Conclusi\IeC {\'o}n final AM vs AG}{32}
+\contentsline {subsection}{\numberline {6.9}An\IeC {\'a}lisis de pr\IeC {\'a}ctica 3}{33}
+\contentsline {subsubsection}{\numberline {6.9.1}An\IeC {\'a}lisis de resultados}{33}
+\contentsline {section}{\numberline {7}Bibliograf\IeC {\'\i }a}{33}
