@@ -5,7 +5,6 @@ Created on Tue Mar 26 12:40:29 2019
 
 @author: José Manuel Pérez Lendínez
 """
-import random
 import numpy as np
 from scipy.io import arff
 import pandas as pd
@@ -15,8 +14,7 @@ import sys
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from time import time
-from sklearn.neighbors import KDTree
-semilla = 10
+semilla = 25
 np.random.seed(semilla)
 #rutas de los ficheros
 colopscopy = "datos/colposcopy.arff"
@@ -35,10 +33,6 @@ max_vecinos = 15000
 #valor para la distribucion de la mutacion
 sigma = 0.3
 
-tam_poblacion = 30
-num_evaluaciones = 15000
-porcentaje_cruce = 0.7
-porcentaje_mutacion = 0.001
 #Calcula la funcion objetivo
 def funcionObjetivo(clase,reduccion):
     return clase * 0.5 + reduccion * 0.5
@@ -49,7 +43,6 @@ def RELIEF(training, test):
   
     #nos quedamos con los datos del training si las clases
     train_datos = training[: , 0:-1];
-    train_clases = np.array(training[:, -1], int)
     num_elementos = np.size(training,0)
     
     start_time = time()
@@ -57,7 +50,7 @@ def RELIEF(training, test):
     #iniciamos el vector de pesos a 0
     num_valores = training[0].size - 1
     w = np.zeros(num_valores)
-
+    
     #creo una matriz de distancias
     distancias = euclidean_distances(train_datos, train_datos)
     #print(distancias)
@@ -105,7 +98,6 @@ def RELIEF(training, test):
     test_clases = np.array(test[:, -1], int)
     
     tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
-    #tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
     
     
     datos_medidos = np.zeros(4)
@@ -117,7 +109,6 @@ def RELIEF(training, test):
     datos_medidos[2] = funcionObjetivo(datos_medidos[0], datos_medidos[1])
     
     return datos_medidos
-
 
 """
 Utilzado para el 1-NN donde no tenemos vector de pesos
@@ -154,14 +145,6 @@ def k_nn(training,test):
     
     return datos_algoritmo
 
-def evaluate(weights, X, y):
-    X_transformed = (X * weights)[:, weights > 0.2]
-    kdtree = KDTree(X_transformed)
-    neighbours = kdtree.query(X_transformed, k=2)[1][:, 1]
-    accuracy = np.mean(y[neighbours] == y)
-    reduction = np.mean(weights < 0.2)
-    return 100*accuracy,reduction*100,100*(accuracy + reduction) / 2
-
 def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
     
     
@@ -187,9 +170,6 @@ def uno_nn(train_datos, train_clases, test_datos, test_clases, w):
     
     return tasa_acierto,tasa_reduccion
 
-
-
-
 def BL(training,test):
     
     
@@ -206,7 +186,6 @@ def BL(training,test):
     
     #inciamos el vector con valores random
     w = np.random.rand(num_valores)
-
     
     #marcara la posicion a mutar paa el vector
     pos_w = 0
@@ -219,13 +198,13 @@ def BL(training,test):
     start_time = time()
     
     #iniciamos los valores para el primer vector 
-    #tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)
-    tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, train_datos, train_clases)
+    tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)
             
-    #funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
+    funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
     mejor_valor_w = funcion_mejora
-    #mejor_w = w
-
+    mejor_w = w
+    mejor_tasa_clase = tasa_clase
+    mejor_tasa_reduccion = tasa_reduccion
 
     
     while num_vecinos < max_vecinos and sin_mejora < max_sin_mejora:
@@ -256,16 +235,16 @@ def BL(training,test):
         else:
             
             #realizamos los calculos para ver si mejora
-            #tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)      
-            tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, train_datos, train_clases)
-            #funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
+            tasa_clase, tasa_reduccion = uno_nn(train_datos, train_clases, test_datos, test_clases, w)            
+            funcion_mejora = 0.5 * tasa_clase + 0.5 * tasa_reduccion
             
             #si mejora almacenamos esos valores
             if mejor_valor_w < funcion_mejora:
-
-                #mejor_w = w
+                
+                mejor_w = w
                 mejor_valor_w = funcion_mejora
-
+                mejor_tasa_clase = tasa_clase
+                mejor_tasa_reduccion = tasa_reduccion
                 sin_mejora = 0
                 
             #si no mejora se descarta y contamos unos sin mejora
@@ -281,17 +260,11 @@ def BL(training,test):
     #preparar los vectores a devolver    
     tiempo = time() - start_time 
     datos_algoritmo = np.zeros(4)
-    """datos_algoritmo[0] = mejor_tasa_clase
+    datos_algoritmo[0] = mejor_tasa_clase
     datos_algoritmo[1] = mejor_tasa_reduccion
     datos_algoritmo[2] = mejor_valor_w
-    datos_algoritmo[3] = tiempo"""
-    #tasa_clase, tasa_reduccion, funcion_mejora = evaluate(w, test_datos, test_clases)
-    tasa_clase, tasa_reduccion = uno_nn(train_datos,train_clases,test_datos,test_clases,w)
-    datos_algoritmo[0] = tasa_clase
-    datos_algoritmo[1] = tasa_reduccion
-    datos_algoritmo[2] = funcion_mejora
-    datos_algoritmo[3] = tiempo
-
+    datos_algoritmo[3] = tiempo      
+    
     return datos_algoritmo
 
 #funcion para imprimir los resultados
@@ -312,14 +285,10 @@ def dibujarTabla(datos):
     tabla = pd.DataFrame(datos, index ,columns)  
     
     print(tabla)
-
-
-    
-    
-   
     
     
 def main():
+    
     #bucle que me generara los datos con cada uno de los fichero spara 
     for i in range(3):
     
@@ -333,12 +302,12 @@ def main():
         
         #Cargo uno de los ficheros
         if i == 0:
-            data = arff.loadarff(colopscopy)
-            print("MEDIDAS COLOPSCOPY")
-            
-        elif i == 1: 
             data = arff.loadarff(ionosphere)
             print("MEDIDAS IONOSPHERE")
+            
+        elif i == 1: 
+            data = arff.loadarff(colopscopy)
+            print("MEDIDAS COLOPSCOPY")
         else:
             data = arff.loadarff(texture)
             print("MEDIDAS TEXTURE")
@@ -366,13 +335,14 @@ def main():
         
         #indicla la posicion en la que se almacenaran los datos del algoritmo
         i_particion = 0
-
+        
         #divido los datos de respetando los portcentajes en 5 particones
         skf = StratifiedKFold(n_splits=num_particiones, shuffle=True, random_state=semilla)
         for train, test in skf.split(datos, clase_test):  
             #nos quedamos con los datos de l aparticion de train y de test
             train_datos = matriz_final[train,:]
             test_datos = matriz_final[test,:]
+            
             #Ejecutamos y guardamos los datos para cada algoritmo
             datos_RELIEF[i_particion] = RELIEF(train_datos,test_datos)
 
